@@ -30,12 +30,12 @@
 #define PORTMACRO_H
 
 #if configUSE_PREEMPTION == 0
-	void vTimer2ISR( void ) interrupt(5);
+void vTimer2ISR(void) interrupt(14);
 #else
-	void vTimer2ISR( void ) interrupt(5) _naked;
+void vTimer2ISR(void) interrupt(14);
 #endif
 
-void vSerialISR( void ) interrupt(4);
+void vSerialISR(void) interrupt(4);
 
 
 /*-----------------------------------------------------------
@@ -62,26 +62,26 @@ typedef signed char BaseType_t;
 typedef unsigned char UBaseType_t;
 
 #if( configUSE_16_BIT_TICKS == 1 )
-	typedef uint16_t TickType_t;
-	#define portMAX_DELAY ( TickType_t ) 0xffff
+typedef uint16_t TickType_t;
+#define portMAX_DELAY ( TickType_t ) 0xffff
 #else
-	typedef uint32_t TickType_t;
-	#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
+typedef uint32_t TickType_t;
+#define portMAX_DELAY ( TickType_t ) 0xffffffffUL
 #endif
 /*-----------------------------------------------------------*/
 
 /* Critical section management. */
-#define portENTER_CRITICAL()		_asm		\
-									push	ACC	\
-									push	IE	\
-									_endasm;	\
+#define portENTER_CRITICAL()		_asm		 \
+									push	ACC	 \
+									push	IE \
+									_endasm;	 \
 									EA = 0;
 
 #define portEXIT_CRITICAL()			_asm			\
 									pop		ACC		\
 									_endasm;		\
 									ACC &= 0x80;	\
-									IE |= ACC;		\
+									IE |= ACC;	\
 									_asm			\
 									pop		ACC		\
 									_endasm;
@@ -97,7 +97,7 @@ typedef unsigned char UBaseType_t;
 /*-----------------------------------------------------------*/
 
 /* Task utilities. */
-void vPortYield( void ) _naked;
+void vPortYield(void) _naked;
 #define portYIELD()	vPortYield();
 /*-----------------------------------------------------------*/
 

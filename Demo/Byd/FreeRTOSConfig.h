@@ -30,7 +30,7 @@
 #include "BF7615BM44LJTX.h"
 
 /* THE VALUE FOR configSTACK_START MUST BE OBTAINED FROM THE .MEM FILE. */
-#define configSTACK_START			( 0x0e )
+#define configSTACK_START			( 0x21 )
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -47,7 +47,7 @@
 #define configUSE_PREEMPTION		1
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
-#define configCPU_CLOCK_HZ			( ( unsigned long ) 98000000 )
+#define configCPU_CLOCK_HZ			( ( unsigned long ) 12000000 )
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES		( 4 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 200 - ( unsigned short ) configSTACK_START )

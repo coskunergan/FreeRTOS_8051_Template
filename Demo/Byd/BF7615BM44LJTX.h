@@ -174,9 +174,9 @@ SFR(PCD_CFG, 0xFB);
 SFR(PCD_CMD, 0xFC);
 SFR(PCD_CFG2, 0xFD);
 SFR(PCD_BIT_ER, 0xFE);
-SFR(SFRPGCN, 0xFF);
-SFR(SFRPAGE, 0xFF);
-SFR(P3MDOUT, 0xFF);
+SFR(PCD_CFG3, 0xFF);
+
+SFR(SFRPAGE, 0x96);
 
 /*  ----------------BYTE Register------------------  */
 

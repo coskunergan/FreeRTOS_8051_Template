@@ -48,22 +48,10 @@
 
 void vParTestInitialise( void )
 {
-unsigned char ucOriginalSFRPage;
-
-	/* Remember the SFR page before it is changed so it can get set back
-	before the function exits. */
-	ucOriginalSFRPage = SFRPAGE;
-
-	/* Setup the SFR page to access the config SFR's. */
-	SFRPAGE = CONFIG_PAGE;
-
-	/* Set the on board LED to push pull. */
-	P3MDOUT |= partstPUSH_PULL;
-
-	/* Return the SFR page. */
-	SFRPAGE = ucOriginalSFRPage;
-
-	P3 = partstALL_OUTPUTS_OFF;
+    REG_ADDR = 0x29;
+    REG_DATA &= ~0x01;
+    TRISA &= ~partstALL_OUTPUTS_OFF;
+    DATAA = 0;
 }
 /*-----------------------------------------------------------*/
 
@@ -73,55 +61,55 @@ portBASE_TYPE xError = pdFALSE;
 
 	vTaskSuspendAll();
 	{
-		if( xValue == pdFALSE )
-		{
-			switch( uxLED )
-			{
-				case 0	:	P3 |= partstOUTPUT_0;
-							break;
-				case 1	:	P3 |= partstOUTPUT_1;
-							break;
-				case 2	:	P3 |= partstOUTPUT_2;
-							break;
-				case 3	:	P3 |= partstOUTPUT_3;
-							break;
-				case 4	:	P3 |= partstOUTPUT_4;
-							break;
-				case 5	:	P3 |= partstOUTPUT_5;
-							break;
-				case 6	:	P3 |= partstOUTPUT_6;
-							break;
-				case 7	:	P3 |= partstOUTPUT_7;
-							break;
-				default	:	/* There are no other LED's wired in. */
-							xError = pdTRUE;
-							break;
-			}
-		}
-		else
-		{
-			switch( uxLED )
-			{
-				case 0	:	P3 &= ~partstOUTPUT_0;
-							break;
-				case 1	:	P3 &= ~partstOUTPUT_1;
-							break;
-				case 2	:	P3 &= ~partstOUTPUT_2;
-							break;
-				case 3	:	P3 &= ~partstOUTPUT_3;
-							break;
-				case 4	:	P3 &= ~partstOUTPUT_4;
-							break;
-				case 5	:	P3 &= ~partstOUTPUT_5;
-							break;
-				case 6	:	P3 &= ~partstOUTPUT_6;
-							break;
-				case 7	:	P3 &= ~partstOUTPUT_7;
-							break;
-				default	:	/* There are no other LED's wired in. */
-							break;
-			}
-		}
+		// if( xValue == pdFALSE )
+		// {
+		// 	switch( uxLED )
+		// 	{
+		// 		case 0	:	DATAA |= partstOUTPUT_0;
+		// 					break;
+		// 		case 1	:	DATAA |= partstOUTPUT_1;
+		// 					break;
+		// 		case 2	:	DATAA |= partstOUTPUT_2;
+		// 					break;
+		// 		case 3	:	DATAA |= partstOUTPUT_3;
+		// 					break;
+		// 		case 4	:	DATAA |= partstOUTPUT_4;
+		// 					break;
+		// 		case 5	:	DATAA |= partstOUTPUT_5;
+		// 					break;
+		// 		case 6	:	DATAA |= partstOUTPUT_6;
+		// 					break;
+		// 		case 7	:	DATAA |= partstOUTPUT_7;
+		// 					break;
+		// 		default	:	/* There are no other LED's wired in. */
+		// 					xError = pdTRUE;
+		// 					break;
+		// 	}
+		// }
+		// else
+		// {
+		// 	switch( uxLED )
+		// 	{
+		// 		case 0	:	DATAA &= ~partstOUTPUT_0;
+		// 					break;
+		// 		case 1	:	DATAA &= ~partstOUTPUT_1;
+		// 					break;
+		// 		case 2	:	DATAA &= ~partstOUTPUT_2;
+		// 					break;
+		// 		case 3	:	DATAA &= ~partstOUTPUT_3;
+		// 					break;
+		// 		case 4	:	DATAA &= ~partstOUTPUT_4;
+		// 					break;
+		// 		case 5	:	DATAA &= ~partstOUTPUT_5;
+		// 					break;
+		// 		case 6	:	DATAA &= ~partstOUTPUT_6;
+		// 					break;
+		// 		case 7	:	DATAA &= ~partstOUTPUT_7;
+		// 					break;
+		// 		default	:	/* There are no other LED's wired in. */
+		// 					break;
+		// 	}
+		//}
 	}
 	xTaskResumeAll();
 }
@@ -134,40 +122,40 @@ void vParTestToggleLED( unsigned portBASE_TYPE uxLED )
 
 	vTaskSuspendAll();
 	{
-		switch( uxLED )
-		{
-			case 0	:	ucBit = partstOUTPUT_0;
-						break;
-			case 1	:	ucBit = partstOUTPUT_1;
-						break;
-			case 2	:	ucBit = partstOUTPUT_2;
-						break;
-			case 3	:	ucBit = partstOUTPUT_3;
-						break;
-			case 4	:	ucBit = partstOUTPUT_4;
-						break;
-			case 5	:	ucBit = partstOUTPUT_5;
-						break;
-			case 6	:	ucBit = partstOUTPUT_6;
-						break;
-			case 7	:	ucBit = partstOUTPUT_7;
-						break;
-			default	:	/* There are no other LED's wired in. */
-						xError = pdTRUE;
-						break;
-		}
+		// switch( uxLED )
+		// {
+		// 	case 0	:	ucBit = partstOUTPUT_0;
+		// 				break;
+		// 	case 1	:	ucBit = partstOUTPUT_1;
+		// 				break;
+		// 	case 2	:	ucBit = partstOUTPUT_2;
+		// 				break;
+		// 	case 3	:	ucBit = partstOUTPUT_3;
+		// 				break;
+		// 	case 4	:	ucBit = partstOUTPUT_4;
+		// 				break;
+		// 	case 5	:	ucBit = partstOUTPUT_5;
+		// 				break;
+		// 	case 6	:	ucBit = partstOUTPUT_6;
+		// 				break;
+		// 	case 7	:	ucBit = partstOUTPUT_7;
+		// 				break;
+		// 	default	:	/* There are no other LED's wired in. */
+		// 				xError = pdTRUE;
+		// 				break;
+		// }
 
-		if( xError != pdTRUE )
-		{
-			if( P3 & ucBit )
-			{
-				P3 &= ~ucBit;
-			}
-			else
-			{
-				P3 |= ucBit;
-			}
-		}
+		// if( xError != pdTRUE )
+		// {
+		// 	if( DATAA & ucBit )
+		// 	{
+		// 		DATAA &= ~ucBit;
+		// 	}
+		// 	else
+		// 	{
+		// 		DATAA |= ucBit;
+		// 	}
+		// }
 	}
 	xTaskResumeAll();
 }
