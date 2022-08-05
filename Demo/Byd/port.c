@@ -38,7 +38,7 @@
 #include "task.h"
 
 /* Constants required to setup timer 2 to produce the RTOS tick. */
-#define portCLOCK_DIVISOR                               ( ( uint32_t ) 366 )
+#define portCLOCK_DIVISOR                               ( ( uint32_t ) configCPU_CLOCK_HZ / 32768 )
 #define portMAX_TIMER_VALUE                             ( ( uint32_t ) 0xffff )
 #define portTIMER_CLOCK_SOURCE_LSI                      ( 1 )
 
@@ -354,29 +354,27 @@ void vPortYield(void) _naked
 #if configUSE_PREEMPTION == 1
 void vTimer2ISR(void) interrupt(14)
 {
-    //WDT_CTRL = 7;
-    PA0 = !PA0;
+    WDT_CTRL = 7;
     /* Preemptive context switch function triggered by the timer 2 ISR.
     This does the same as vPortYield() (see above) with the addition
     of incrementing the RTOS tick count. */
     portSAVE_CONTEXT();
     portCOPY_STACK_TO_XRAM();
 
-   // if(xTaskIncrementTick() != pdFALSE)
+    if(xTaskIncrementTick() != pdFALSE)
     {
-    //    vTaskSwitchContext();
+        vTaskSwitchContext();
     }
-
     portCLEAR_INTERRUPT_FLAG();
     portCOPY_XRAM_TO_STACK();
-    //portRESTORE_CONTEXT();
+    portRESTORE_CONTEXT();
 }
 #else
-void vTimer2ISR(void) interrupt 5
+void vTimer2ISR(void) interrupt(14)
 {
     /* When using the cooperative scheduler the timer 2 ISR is only
     required to increment the RTOS tick count. */
-
+    WDT_CTRL = 7;
     xTaskIncrementTick();
     portCLEAR_INTERRUPT_FLAG();
 }

@@ -15,7 +15,7 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License 
+   You should have received a copy of the GNU General Public License
    along with this library; see the file COPYING. If not, write to the
    Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA.
@@ -28,46 +28,46 @@
    might be covered by the GNU General Public License.
 -------------------------------------------------------------------------*/
 
- /*
-  * Header file to overcome 8051 compiler differences for specifying
-  * special function registers. The following compilers are supported:
-  * SDCC, Keil, Raisonance, IAR, Hi-Tech, Tasking, Crossware, Wickenhaeuser.
-  * Unfortunately not for use with Dunfield. The compilers are identified by
-  * their unique predefined macros. See also:
-  * http://predef.sourceforge.net/precomp.html
-  *
-  * SBIT and SFR define special bit and special function registers at the given
-  * address. SFR16 and SFR32 define sfr combinations at adjacent addresses in
-  * little-endian format. SFR16E and SFR32E define sfr combinations without
-  * prerequisite byte order or adjacency. None of these multi-byte sfr
-  * combinations will guarantee the order in which they are accessed when read
-  * or written.
-  * SFR16X and SFR32X for 16 bit and 32 bit xdata registers are not defined
-  * to avoid portability issues because of compiler endianness.
-  * SFR16LEX is provided for 16 bit little endian xdata registers. It is usable
-  * on little endian compilers only; on big endian compilers, these registers
-  * will not be defined.
-  * This file is to be included in every microcontroller specific header file.
-  * Example:
-  *
-  * // my_mcu.h: sfr definitions for my mcu
-  * #include <compiler.h>
-  *
-  * SBIT  (P0_1, 0x80, 1);      // Port 0 pin 1
-  *
-  * SFR   (P0, 0x80);           // Port 0
-  *
-  * SFRX  (CPUCS, 0xE600);      // Cypress FX2 Control and Status register in xdata memory at 0xE600
-  *
-  * SFR16 (TMR2, 0xCC);         // Timer 2, lsb at 0xCC, msb at 0xCD
-  *
-  * SFR16E(TMR0, 0x8C8A);       // Timer 0, lsb at 0x8A, msb at 0x8C
-  *
-  * SFR32 (MAC0ACC, 0x93);      // SiLabs C8051F120 32 bits MAC0 Accumulator, lsb at 0x93, msb at 0x96
-  *
-  * SFR32E(SUMR, 0xE5E4E3E2);   // TI MSC1210 SUMR 32 bits Summation register, lsb at 0xE2, msb at 0xE5
-  *
- */
+/*
+ * Header file to overcome 8051 compiler differences for specifying
+ * special function registers. The following compilers are supported:
+ * SDCC, Keil, Raisonance, IAR, Hi-Tech, Tasking, Crossware, Wickenhaeuser.
+ * Unfortunately not for use with Dunfield. The compilers are identified by
+ * their unique predefined macros. See also:
+ * http://predef.sourceforge.net/precomp.html
+ *
+ * SBIT and SFR define special bit and special function registers at the given
+ * address. SFR16 and SFR32 define sfr combinations at adjacent addresses in
+ * little-endian format. SFR16E and SFR32E define sfr combinations without
+ * prerequisite byte order or adjacency. None of these multi-byte sfr
+ * combinations will guarantee the order in which they are accessed when read
+ * or written.
+ * SFR16X and SFR32X for 16 bit and 32 bit xdata registers are not defined
+ * to avoid portability issues because of compiler endianness.
+ * SFR16LEX is provided for 16 bit little endian xdata registers. It is usable
+ * on little endian compilers only; on big endian compilers, these registers
+ * will not be defined.
+ * This file is to be included in every microcontroller specific header file.
+ * Example:
+ *
+ * // my_mcu.h: sfr definitions for my mcu
+ * #include <compiler.h>
+ *
+ * SBIT  (P0_1, 0x80, 1);      // Port 0 pin 1
+ *
+ * SFR   (P0, 0x80);           // Port 0
+ *
+ * SFRX  (CPUCS, 0xE600);      // Cypress FX2 Control and Status register in xdata memory at 0xE600
+ *
+ * SFR16 (TMR2, 0xCC);         // Timer 2, lsb at 0xCC, msb at 0xCD
+ *
+ * SFR16E(TMR0, 0x8C8A);       // Timer 0, lsb at 0x8A, msb at 0x8C
+ *
+ * SFR32 (MAC0ACC, 0x93);      // SiLabs C8051F120 32 bits MAC0 Accumulator, lsb at 0x93, msb at 0x96
+ *
+ * SFR32E(SUMR, 0xE5E4E3E2);   // TI MSC1210 SUMR 32 bits Summation register, lsb at 0xE2, msb at 0xE5
+ *
+*/
 
 #ifndef COMPILER_H
 #define COMPILER_H
@@ -108,7 +108,7 @@
 # define INTERRUPT_USING(name, vector, regnum) void name (void) interrupt vector using regnum
 
 // NOP () macro support
-extern void _nop_ (void);
+extern void _nop_(void);
 #define NOP() _nop_()
 
 /** Raisonance
@@ -149,7 +149,7 @@ extern void _nop_ (void);
 # define INTERRUPT(name, vector) _Pragma(_PPARAM_(vector)) __interrupt void name(void)
 # define INTERRUPT_USING(name, vector, regnum) _Pragma(_PPARAM2_(regnum)) _Pragma(_PPARAM_(vector)) __interrupt void name(void)
 
-extern __intrinsic void __no_operation (void);
+extern __intrinsic void __no_operation(void);
 #define NOP() __no_operation()
 
 /** Tasking / Altium
@@ -173,7 +173,7 @@ extern __intrinsic void __no_operation (void);
 # define INTERRUPT_USING(name, vector, regnum) _interrupt (vector) _using(regnum) void name (void)
 
 // NOP () macro support
-extern void _nop (void);
+extern void _nop(void);
 #define NOP() _nop()
 
 /** Hi-Tech 8051

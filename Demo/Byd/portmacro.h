@@ -71,17 +71,17 @@ typedef uint32_t TickType_t;
 /*-----------------------------------------------------------*/
 
 /* Critical section management. */
-#define portENTER_CRITICAL()		_asm		 \
-									push	ACC	 \
-									push	IE \
-									_endasm;	 \
+#define portENTER_CRITICAL()		_asm			\
+									push	ACC		\
+									push	IE		\
+									_endasm;		\
 									EA = 0;
 
 #define portEXIT_CRITICAL()			_asm			\
 									pop		ACC		\
 									_endasm;		\
 									ACC &= 0x80;	\
-									IE |= ACC;	\
+									IE |= ACC;		\
 									_asm			\
 									pop		ACC		\
 									_endasm;

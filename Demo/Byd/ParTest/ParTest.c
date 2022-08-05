@@ -46,7 +46,7 @@
  * Simple parallel port IO routines.
  *-----------------------------------------------------------*/
 
-void vParTestInitialise( void )
+void vParTestInitialise(void)
 {
     REG_ADDR = 0x29;
     REG_DATA &= ~0x01;
@@ -55,109 +55,133 @@ void vParTestInitialise( void )
 }
 /*-----------------------------------------------------------*/
 
-void vParTestSetLED( unsigned portBASE_TYPE uxLED, portBASE_TYPE xValue )
+void vParTestSetLED(unsigned portBASE_TYPE uxLED, portBASE_TYPE xValue)
 {
-portBASE_TYPE xError = pdFALSE;
+    portBASE_TYPE xError = pdFALSE;
 
-	vTaskSuspendAll();
-	{
-		// if( xValue == pdFALSE )
-		// {
-		// 	switch( uxLED )
-		// 	{
-		// 		case 0	:	DATAA |= partstOUTPUT_0;
-		// 					break;
-		// 		case 1	:	DATAA |= partstOUTPUT_1;
-		// 					break;
-		// 		case 2	:	DATAA |= partstOUTPUT_2;
-		// 					break;
-		// 		case 3	:	DATAA |= partstOUTPUT_3;
-		// 					break;
-		// 		case 4	:	DATAA |= partstOUTPUT_4;
-		// 					break;
-		// 		case 5	:	DATAA |= partstOUTPUT_5;
-		// 					break;
-		// 		case 6	:	DATAA |= partstOUTPUT_6;
-		// 					break;
-		// 		case 7	:	DATAA |= partstOUTPUT_7;
-		// 					break;
-		// 		default	:	/* There are no other LED's wired in. */
-		// 					xError = pdTRUE;
-		// 					break;
-		// 	}
-		// }
-		// else
-		// {
-		// 	switch( uxLED )
-		// 	{
-		// 		case 0	:	DATAA &= ~partstOUTPUT_0;
-		// 					break;
-		// 		case 1	:	DATAA &= ~partstOUTPUT_1;
-		// 					break;
-		// 		case 2	:	DATAA &= ~partstOUTPUT_2;
-		// 					break;
-		// 		case 3	:	DATAA &= ~partstOUTPUT_3;
-		// 					break;
-		// 		case 4	:	DATAA &= ~partstOUTPUT_4;
-		// 					break;
-		// 		case 5	:	DATAA &= ~partstOUTPUT_5;
-		// 					break;
-		// 		case 6	:	DATAA &= ~partstOUTPUT_6;
-		// 					break;
-		// 		case 7	:	DATAA &= ~partstOUTPUT_7;
-		// 					break;
-		// 		default	:	/* There are no other LED's wired in. */
-		// 					break;
-		// 	}
-		//}
-	}
-	xTaskResumeAll();
+    vTaskSuspendAll();
+    {
+        if(xValue == pdFALSE)
+        {
+            switch(uxLED)
+            {
+                case 0	:
+                    DATAA |= partstOUTPUT_0;
+                    break;
+                case 1	:
+                    DATAA |= partstOUTPUT_1;
+                    break;
+                case 2	:
+                    DATAA |= partstOUTPUT_2;
+                    break;
+                case 3	:
+                    DATAA |= partstOUTPUT_3;
+                    break;
+                case 4	:
+                    DATAA |= partstOUTPUT_4;
+                    break;
+                case 5	:
+                    DATAA |= partstOUTPUT_5;
+                    break;
+                case 6	:
+                    DATAA |= partstOUTPUT_6;
+                    break;
+                case 7	:
+                    DATAA |= partstOUTPUT_7;
+                    break;
+                default	:	/* There are no other LED's wired in. */
+                    xError = pdTRUE;
+                    break;
+            }
+        }
+        else
+        {
+            switch(uxLED)
+            {
+                case 0	:
+                    DATAA &= ~partstOUTPUT_0;
+                    break;
+                case 1	:
+                    DATAA &= ~partstOUTPUT_1;
+                    break;
+                case 2	:
+                    DATAA &= ~partstOUTPUT_2;
+                    break;
+                case 3	:
+                    DATAA &= ~partstOUTPUT_3;
+                    break;
+                case 4	:
+                    DATAA &= ~partstOUTPUT_4;
+                    break;
+                case 5	:
+                    DATAA &= ~partstOUTPUT_5;
+                    break;
+                case 6	:
+                    DATAA &= ~partstOUTPUT_6;
+                    break;
+                case 7	:
+                    DATAA &= ~partstOUTPUT_7;
+                    break;
+                default	:	/* There are no other LED's wired in. */
+                    break;
+            }
+        }
+    }
+    xTaskResumeAll();
 }
 /*-----------------------------------------------------------*/
 
-void vParTestToggleLED( unsigned portBASE_TYPE uxLED )
+void vParTestToggleLED(unsigned portBASE_TYPE uxLED)
 {
-	unsigned char ucBit = 0;
-	portBASE_TYPE xError = pdFALSE;
+    unsigned char ucBit = 0;
+    portBASE_TYPE xError = pdFALSE;
 
-	vTaskSuspendAll();
-	{
-		// switch( uxLED )
-		// {
-		// 	case 0	:	ucBit = partstOUTPUT_0;
-		// 				break;
-		// 	case 1	:	ucBit = partstOUTPUT_1;
-		// 				break;
-		// 	case 2	:	ucBit = partstOUTPUT_2;
-		// 				break;
-		// 	case 3	:	ucBit = partstOUTPUT_3;
-		// 				break;
-		// 	case 4	:	ucBit = partstOUTPUT_4;
-		// 				break;
-		// 	case 5	:	ucBit = partstOUTPUT_5;
-		// 				break;
-		// 	case 6	:	ucBit = partstOUTPUT_6;
-		// 				break;
-		// 	case 7	:	ucBit = partstOUTPUT_7;
-		// 				break;
-		// 	default	:	/* There are no other LED's wired in. */
-		// 				xError = pdTRUE;
-		// 				break;
-		// }
+    vTaskSuspendAll();
+    {
+        switch(uxLED)
+        {
+            case 0	:
+                ucBit = partstOUTPUT_0;
+                break;
+            case 1	:
+                ucBit = partstOUTPUT_1;
+                break;
+            case 2	:
+                ucBit = partstOUTPUT_2;
+                break;
+            case 3	:
+                ucBit = partstOUTPUT_3;
+                break;
+            case 4	:
+                ucBit = partstOUTPUT_4;
+                break;
+            case 5	:
+                ucBit = partstOUTPUT_5;
+                break;
+            case 6	:
+                ucBit = partstOUTPUT_6;
+                break;
+            case 7	:
+                ucBit = partstOUTPUT_7;
+                break;
+            default	:	/* There are no other LED's wired in. */
+                xError = pdTRUE;
+                break;
+        }
 
-		// if( xError != pdTRUE )
-		// {
-		// 	if( DATAA & ucBit )
-		// 	{
-		// 		DATAA &= ~ucBit;
-		// 	}
-		// 	else
-		// 	{
-		// 		DATAA |= ucBit;
-		// 	}
-		// }
-	}
-	xTaskResumeAll();
+        if(xError != pdTRUE)
+        {
+            if(DATAA & ucBit)
+            {
+                DATAA &= ~ucBit;
+            }
+            else
+            {
+                DATAA |= ucBit;
+            }
+        }
+    }
+    xTaskResumeAll();
 }
 
 

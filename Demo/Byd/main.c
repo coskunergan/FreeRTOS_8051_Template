@@ -192,23 +192,23 @@ void main(void)
     vParTestInitialise();
 
     /* Start the used standard demo tasks. */
-    //vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
+    vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
     //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
-    //vStartIntegerMathTasks(mainINTEGER_PRIORITY);
+    vStartIntegerMathTasks(mainINTEGER_PRIORITY);
     //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
-    //vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
+    vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 
     /* Start the tasks defined in this file.  The first three never block so
     must not be used with the co-operative scheduler. */
 #if configUSE_PREEMPTION == 1
     {
-        //xTaskCreate(vRegisterCheck, "RegChck", configMINIMAL_STACK_SIZE, mainDUMMY_POINTER, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
-        //xTaskCreate(vFLOPCheck1, "FLOP", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
-        //xTaskCreate(vFLOPCheck2, "FLOP", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
+        xTaskCreate(vRegisterCheck, "RegChck", configMINIMAL_STACK_SIZE, mainDUMMY_POINTER, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
+        xTaskCreate(vFLOPCheck1, "FLOP", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
+        xTaskCreate(vFLOPCheck2, "FLOP", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, (TaskHandle_t *) NULL);
     }
 #endif
 
-    //xTaskCreate(vErrorChecks, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, (TaskHandle_t *) NULL);
+    xTaskCreate(vErrorChecks, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, (TaskHandle_t *) NULL);
 
 
     /* Finally kick off the scheduler.  This function should never return. */
@@ -240,29 +240,36 @@ static void prvSetupHardware(void)
     IEN1 |= 0x80;
     EA = 1;
 
+    // Check Led Pin init
+    TRISH &= ~ucLED_BIT;
+    DATAH &= ~ucLED_BIT;
+
     prvSetupSystemClock();
 }
 /*-----------------------------------------------------------*/
 
 static void prvSetupSystemClock(void)
 {
+    volatile uint16_t delay = 10000;
     // Clock 12 MHz
     SYS_CLK_CFG &= ~(0x0E);
     SYS_CLK_CFG |= (0x0E & (4 << 1));
     SYS_CLK_CFG &= ~(0x01);
+    delay = 10000;
+    while(delay--);
 }
 /*-----------------------------------------------------------*/
 
 static void prvToggleOnBoardLED(void)
 {
     /* If the on board LED is on, turn it off and vice versa. */
-    if(DATAA & ucLED_BIT)
+    if(DATAH & ucLED_BIT)
     {
-        DATAA &= ~ucLED_BIT;
+        DATAH &= ~ucLED_BIT;
     }
     else
     {
-        // DATAA |= ucLED_BIT;
+        DATAH |= ucLED_BIT;
     }
 }
 /*-----------------------------------------------------------*/
@@ -296,24 +303,21 @@ static void vErrorChecks(void *pvParameters)
             vTaskDelay(mainERROR_FLASH_PERIOD);
         }
 
-
-
         /* Check the demo application tasks for errors. */
-
         if(xAreIntegerMathsTaskStillRunning() != pdTRUE)
         {
             xErrorHasOccurred = pdTRUE;
         }
 
-        if(xArePollingQueuesStillRunning() != pdTRUE)
-        {
-            xErrorHasOccurred = pdTRUE;
-        }
+        // if(xArePollingQueuesStillRunning() != pdTRUE)
+        // {
+        //     xErrorHasOccurred = pdTRUE;
+        // }
 
-        if(xAreComTestTasksStillRunning() != pdTRUE)
-        {
-            xErrorHasOccurred = pdTRUE;
-        }
+        // if(xAreComTestTasksStillRunning() != pdTRUE)
+        // {
+        //     xErrorHasOccurred = pdTRUE;
+        // }
 
         if(xAreSemaphoreTasksStillRunning() != pdTRUE)
         {
