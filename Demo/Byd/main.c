@@ -193,7 +193,7 @@ void main(void)
 
     /* Start the used standard demo tasks. */
     vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
-    //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
+    vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
     //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
     vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
@@ -250,7 +250,7 @@ static void prvSetupHardware(void)
 
 static void prvSetupSystemClock(void)
 {
-    volatile uint16_t delay = 10000;
+    volatile uint16_t delay;
     // Clock 12 MHz
     SYS_CLK_CFG &= ~(0x0E);
     SYS_CLK_CFG |= (0x0E & (4 << 1));
@@ -309,10 +309,10 @@ static void vErrorChecks(void *pvParameters)
             xErrorHasOccurred = pdTRUE;
         }
 
-        // if(xArePollingQueuesStillRunning() != pdTRUE)
-        // {
-        //     xErrorHasOccurred = pdTRUE;
-        // }
+        if(xArePollingQueuesStillRunning() != pdTRUE)
+        {
+            xErrorHasOccurred = pdTRUE;
+        }
 
         // if(xAreComTestTasksStillRunning() != pdTRUE)
         // {
