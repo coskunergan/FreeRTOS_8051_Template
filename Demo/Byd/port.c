@@ -353,8 +353,7 @@ void vPortYield(void) _naked
 
 #if configUSE_PREEMPTION == 1
 void vTimer2ISR(void) interrupt(14) _naked
-{
-    WDT_CTRL = 7;
+{    
     /* Preemptive context switch function triggered by the timer 2 ISR.
     This does the same as vPortYield() (see above) with the addition
     of incrementing the RTOS tick count. */
@@ -374,7 +373,6 @@ void vTimer2ISR(void) interrupt(14)
 {
     /* When using the cooperative scheduler the timer 2 ISR is only
     required to increment the RTOS tick count. */
-    WDT_CTRL = 7;
     xTaskIncrementTick();
     portCLEAR_INTERRUPT_FLAG();
 }

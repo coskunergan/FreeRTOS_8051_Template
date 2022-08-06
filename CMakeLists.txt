@@ -91,7 +91,7 @@ file(GLOB PROJECT_SOURCES
 	"Source/tasks.c"
 	"Source/queue.c"
 	"Source/list.c"
-	"Demo/Common/Full/flash.c"
+	"Demo/Common/Minimal/flash.c"
 	"Demo/Common/Full/print.c"     
 	"Demo/Common/Minimal/integer.c"
 	"Demo/Common/Minimal/PollQ.c"

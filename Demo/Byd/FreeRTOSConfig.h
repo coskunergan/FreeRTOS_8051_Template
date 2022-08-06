@@ -48,9 +48,9 @@
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 12000000 )
-#define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
+#define configTICK_RATE_HZ			( ( TickType_t ) 100 )
 #define configMAX_PRIORITIES		( 4 )
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 - ( unsigned short ) configSTACK_START )
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 200 - ( unsigned short ) configSTACK_START )
 #define configTOTAL_HEAP_SIZE		( ( size_t ) ( 15 * 256 ) )
 #define configMAX_TASK_NAME_LEN		( 8 )
 #define configUSE_TRACE_FACILITY	0

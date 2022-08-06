@@ -32,16 +32,6 @@
 #include "task.h"
 #include "serial.h"
 
-/* Constants required to setup the serial control register. */
-#define ser8_BIT_MODE			( ( unsigned char ) 0x40 )
-#define serRX_ENABLE			( ( unsigned char ) 0x10 )
-
-/* Constants to setup the timer used to generate the baud rate. */
-#define serCLOCK_DIV_48			( ( unsigned char ) 0x03 )
-#define serUSE_PRESCALED_CLOCK	( ( unsigned char ) 0x10 )
-#define ser8BIT_WITH_RELOAD		( ( unsigned char ) 0x20 )
-#define serSMOD					( ( unsigned char ) 0x10 )
-
 static QueueHandle_t xRxedChars;
 static QueueHandle_t xCharsForTx;
 
@@ -51,56 +41,66 @@ data static unsigned portBASE_TYPE uxTxEmpty;
 
 xComPortHandle xSerialPortInitMinimal(unsigned long ulWantedBaud, unsigned portBASE_TYPE uxQueueLength)
 {
-    unsigned long ulReloadValue;
-    const portFLOAT fBaudConst = (portFLOAT) configCPU_CLOCK_HZ * (portFLOAT) 2.0;
     unsigned char ucOriginalSFRPage;
 
     portENTER_CRITICAL();
     {
         ucOriginalSFRPage = SFRPAGE;
-// 		SFRPAGE = 0;
+
+        SFRPAGE = 0;
 
         uxTxEmpty = pdTRUE;
 
-// 		/* Create the queues used by the com test task. */
+        /* Create the queues used by the com test task. */
         xRxedChars = xQueueCreate(uxQueueLength, (unsigned portBASE_TYPE) sizeof(char));
         xCharsForTx = xQueueCreate(uxQueueLength, (unsigned portBASE_TYPE) sizeof(char));
 
-// 		/* Calculate the baud rate to use timer 1. */
-        ulReloadValue = (unsigned long)(((portFLOAT) 256 - (fBaudConst / (portFLOAT)(32 * ulWantedBaud))) + (portFLOAT) 0.5);
+        EA = 0;
+        IPL2 |= 0x04;
+        IRCON2 &= ~0x04;
+        REG_ADDR = 0x34;
+        REG_DATA &= ~(0x60);
+        REG_DATA |= (0x60 & (1 << 5));
 
-// 		/* Set timer one for desired mode of operation. */
-// 		TMOD &= 0x08;
-// 		TMOD |= ser8BIT_WITH_RELOAD;
-// 		SSTA0 |= serSMOD;
+        REG_ADDR = 0x1B;
+        REG_DATA |= 0x10;
+        REG_ADDR = 0x1B;
+        REG_DATA |= 0x20;
+        REG_ADDR = 0x27;
+        REG_DATA &= ~0x01;
+        TRISE |= 0x10;
+        REG_ADDR = 0x27;
+        REG_DATA &= ~0x02;
+        TRISE &= ~0x20;
 
-// 		/* Set the reload and start values for the time. */
-// 		TL1 = ( unsigned char ) ulReloadValue;
-// 		TH1 = ( unsigned char ) ulReloadValue;
-
-// 		/* Setup the control register for standard n, 8, 1 - variable baud rate. */
-// 		SCON = ser8_BIT_MODE | serRX_ENABLE;
-
-// 		/* Enable the serial port interrupts */
-// 		ES = 1;
-
-// 		/* Start the timer. */
-// 		TR1 = 1;
+        UART0_BDL = (24000000UL / (16UL * ulWantedBaud));
+        UART0_CON2 = ((uint8_t)((uint16_t)(24000000UL / (16UL * ulWantedBaud)) >> 8) & 0x03);
+        UART0_CON2 |= (0x08);
+        UART0_CON2 |= (0x04);
+        UART0_CON1 |= (0x40);
+        UART0_CON1 &= (~0x10);
+        UART0_CON1 |= (0x20);
+        UART0_CON1 &= (~0x04);
+        UART0_CON1 |= (0x08);
+        UART0_CON1 &= (~0x02);
+        UART0_CON1 |= (0x01);
+        UART0_STATE &= ((~0x08) & (~0x10));
+        IEN2 |= 0x04;
 
         SFRPAGE = ucOriginalSFRPage;
     }
     portEXIT_CRITICAL();
 
-// 	/* Unlike some ports, this serial code does not allow for more than one
-// 	com port.  We therefore don't return a pointer to a port structure and can
-// 	instead just return NULL. */
+    /* Unlike some ports, this serial code does not allow for more than one
+    com port.  We therefore don't return a pointer to a port structure and can
+    instead just return NULL. */
     return NULL;
 }
 /*-----------------------------------------------------------*/
 
-void vSerialISR(void) interrupt(4)
+void vSerialISR(void) interrupt(17)
 {
-//char cChar;
+    char cChar;
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
     /* 8051 port interrupt routines MUST be placed within a critical section
@@ -108,32 +108,42 @@ void vSerialISR(void) interrupt(4)
 
     portENTER_CRITICAL();
     {
-//  		if( RI )
-//  		{
-// // 			/* Get the character and post it on the queue of Rxed characters.
-// // 			If the post causes a task to wake force a context switch if the woken task
-// // 			has a higher priority than the task we have interrupted. */
-// // 			cChar = SBUF;
-//  			RI = 0;
-
-//  			xQueueSendFromISR( xRxedChars, &cChar, &xHigherPriorityTaskWoken );
-//  		}
-
-//  		if( TI )
-//  		{
-//  			if( xQueueReceiveFromISR( xCharsForTx, &cChar, &xHigherPriorityTaskWoken ) == ( portBASE_TYPE ) pdTRUE )
-//  			{
-//  				/* Send the next character queued for Tx. */
-// // 				SBUF = cChar;
-// 			}
-//  			else
-//  			{
-//  				/* Queue empty, nothing to send. */
-//  				uxTxEmpty = pdTRUE;
-//  			}
-
-//  			TI = 0;
-//  		}
+        IRCON2 &= ~0x04;
+        if(UART0_STATE & 0x08)
+        {
+            /* Get the character and post it on the queue of Rxed characters.
+            If the post causes a task to wake force a context switch if the woken task
+            has a higher priority than the task we have interrupted. */
+            cChar = UART0_BUF;
+            UART0_STATE = 0x17;
+            xQueueSendFromISR(xRxedChars, &cChar, &xHigherPriorityTaskWoken);
+        }
+        if(UART0_STATE & 0x01)
+        {
+            UART0_STATE = 0x1E;
+        }
+        if(UART0_STATE & 0x02)
+        {
+            UART0_STATE = 0x1D;
+        }
+        if(UART0_STATE & 0x04)
+        {
+            UART0_STATE = 0x1B;
+        }
+        if(UART0_STATE & 0x10)
+        {
+            UART0_STATE = 0x0F;
+            if(xQueueReceiveFromISR(xCharsForTx, &cChar, &xHigherPriorityTaskWoken) == (portBASE_TYPE) pdTRUE)
+            {
+                /* Send the next character queued for Tx. */
+                UART0_BUF = cChar;
+            }
+            else
+            {
+                /* Queue empty, nothing to send. */
+                uxTxEmpty = pdTRUE;
+            }
+        }
 
         if(xHigherPriorityTaskWoken)
         {
@@ -142,7 +152,6 @@ void vSerialISR(void) interrupt(4)
     }
     portEXIT_CRITICAL();
 }
-
 
 
 /*-----------------------------------------------------------*/
@@ -176,8 +185,9 @@ portBASE_TYPE xSerialPutChar(xComPortHandle pxPort, signed char cOutChar, TickTy
     {
         if(uxTxEmpty == pdTRUE)
         {
-            //SBUF = cOutChar;
+            UART0_BUF = cOutChar;
             uxTxEmpty = pdFALSE;
+            UART0_STATE = 0x0F;            
             xReturn = (portBASE_TYPE) pdTRUE;
         }
         else

@@ -35,7 +35,7 @@ void vTimer2ISR(void) interrupt(14);
 void vTimer2ISR(void) interrupt(14) _naked;
 #endif
 
-void vSerialISR(void) interrupt(4);
+void vSerialISR(void) interrupt(17);
 
 
 /*-----------------------------------------------------------

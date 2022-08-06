@@ -90,16 +90,16 @@
 
 /* Toggle rate for the on board LED - which is dependent on whether or not
 an error has been detected. */
-#define mainNO_ERROR_FLASH_PERIOD	( ( TickType_t ) 5000 )
-#define mainERROR_FLASH_PERIOD		( ( TickType_t ) 250 )
+#define mainNO_ERROR_FLASH_PERIOD	( ( TickType_t ) 100 )
+#define mainERROR_FLASH_PERIOD		( ( TickType_t ) 5 )
 
 /* Baud rate used by the serial port tasks. */
-#define mainCOM_TEST_BAUD_RATE		( ( unsigned long ) 115200 )
+#define mainCOM_TEST_BAUD_RATE		( ( unsigned long ) 4800 )
 
 /* Pass an invalid LED number to the COM test task as we don't want it to flash
 an LED.  There are only 8 LEDs (excluding the on board LED) wired in and these
 are all used by the flash tasks. */
-#define mainCOM_TEST_LED			( 200 )
+#define mainCOM_TEST_LED			( 4 )
 
 /* Pointer passed as a parameter to vRegisterCheck() just so it has some know
 values to check for in the DPH, DPL and B registers. */
@@ -170,10 +170,10 @@ void main(void)
     vParTestInitialise();
 
     /* Start the used standard demo tasks. */
-    vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
+    //vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
     vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
-    //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
+    vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
     vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 
     /* Start the tasks defined in this file.  The first three never block so
@@ -271,6 +271,7 @@ static void vErrorChecks(void *pvParameters)
         {
             /* No errors have been detected so delay for a longer period.  The
             on board LED will get toggled every mainNO_ERROR_FLASH_PERIOD ms. */
+            WDT_CTRL = 7;
             vTaskDelay(mainNO_ERROR_FLASH_PERIOD);
         }
         else
@@ -292,10 +293,10 @@ static void vErrorChecks(void *pvParameters)
             xErrorHasOccurred = pdTRUE;
         }
 
-        // if(xAreComTestTasksStillRunning() != pdTRUE)
-        // {
-        //     xErrorHasOccurred = pdTRUE;
-        // }
+        if(xAreComTestTasksStillRunning() != pdTRUE)
+        {
+            xErrorHasOccurred = pdTRUE;
+        }
 
         if(xAreSemaphoreTasksStillRunning() != pdTRUE)
         {
