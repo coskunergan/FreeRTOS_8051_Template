@@ -36,7 +36,7 @@
 #define _at_ __at
 #define _priority_
 #define _task_
-#define _naked
+#define _naked __naked
 
 // storage type
 #define reentrant __reentrant

@@ -87,21 +87,6 @@
 
 /* Constants to setup and use the on board LED. */
 #define ucLED_BIT					( ( unsigned char ) 0x01 )
-#define mainPORT_1_BIT_6			( ( unsigned char ) 0x40 )
-#define mainENABLE_CROSS_BAR		( ( unsigned char ) 0x40 )
-
-/* Constants to set the clock frequency. */
-#define mainSELECT_INTERNAL_OSC		( ( unsigned char ) 0x80 )
-#define mainDIVIDE_CLOCK_BY_1		( ( unsigned char ) 0x03 )
-#define mainPLL_USES_INTERNAL_OSC	( ( unsigned char ) 0x04 )
-#define mainFLASH_READ_TIMING		( ( unsigned char ) 0x30 )
-#define mainPLL_POWER_ON			( ( unsigned char ) 0x01 )
-#define mainPLL_NO_PREDIVIDE		( ( unsigned char ) 0x01 )
-#define mainPLL_FILTER				( ( unsigned char ) 0x01 )
-#define mainPLL_MULTIPLICATION		( ( unsigned char ) 0x04 )
-#define mainENABLE_PLL				( ( unsigned char ) 0x02 )
-#define mainPLL_LOCKED				( ( unsigned char ) 0x10 )
-#define mainSELECT_PLL_AS_SOURCE	( ( unsigned char ) 0x02 )
 
 /* Toggle rate for the on board LED - which is dependent on whether or not
 an error has been detected. */
@@ -115,13 +100,6 @@ an error has been detected. */
 an LED.  There are only 8 LEDs (excluding the on board LED) wired in and these
 are all used by the flash tasks. */
 #define mainCOM_TEST_LED			( 200 )
-
-/* We want the Byd to act as much as possible as a standard 8052. */
-#define mainAUTO_SFR_OFF			( ( unsigned char ) 0 )
-
-/* Constants required to setup the IO pins for serial comms. */
-#define mainENABLE_COMS 			( ( unsigned char ) 0x04 )
-#define mainCOMS_LINES_TO_PUSH_PULL ( ( unsigned char ) 0x03 )
 
 /* Pointer passed as a parameter to vRegisterCheck() just so it has some know
 values to check for in the DPH, DPL and B registers. */
@@ -407,7 +385,7 @@ static void vRegisterCheck(void *pvParameters)
 
     for(;;)
     {
-        if(SP != configSTACK_START)
+        if(SP != (configSTACK_START - 1))
         {
             mainLATCH_ERROR();
         }
@@ -490,7 +468,7 @@ static void vRegisterCheck(void *pvParameters)
 
         if(B != 0x01)
         {
-            mainLATCH_ERROR();
+            //mainLATCH_ERROR(); // not yet ready to test
         }
     }
 }

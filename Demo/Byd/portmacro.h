@@ -32,7 +32,7 @@
 #if configUSE_PREEMPTION == 0
 void vTimer2ISR(void) interrupt(14);
 #else
-void vTimer2ISR(void) interrupt(14);
+void vTimer2ISR(void) interrupt(14) _naked;
 #endif
 
 void vSerialISR(void) interrupt(4);

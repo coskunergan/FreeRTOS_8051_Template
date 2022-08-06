@@ -50,7 +50,7 @@
 
 /* Macro to clear the timer 2 interrupt flag. */
 #define portCLEAR_INTERRUPT_FLAG()                      IRCON1 &= ~0x80; \
-                                                        INT_PE_STAT = ~0x08;
+                                                        INT_PE_STAT &= ~0x08;
 
 /* Used during a context switch to store the size of the stack being copied
 to or from XRAM. */
@@ -352,7 +352,7 @@ void vPortYield(void) _naked
 /*-----------------------------------------------------------*/
 
 #if configUSE_PREEMPTION == 1
-void vTimer2ISR(void) interrupt(14)
+void vTimer2ISR(void) interrupt(14) _naked
 {
     WDT_CTRL = 7;
     /* Preemptive context switch function triggered by the timer 2 ISR.
@@ -423,7 +423,6 @@ static void prvSetupTimerInterrupt(void)
 
     IEN1 |= 0x80; // enable int
     TIMER2_CFG |= 0x01;  // run
-    EA = 1;
 
     /* Restore the original SFR page. */
     SFRPAGE = ucOriginalSFRPage;
