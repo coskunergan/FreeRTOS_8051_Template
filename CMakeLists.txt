@@ -5,29 +5,11 @@ cmake_minimum_required(VERSION 3.15)
 
 #### setable variables ####
 set(SDCC_EXECUTABLE "C:/SDCC/bin/sdcc.exe" CACHE PATH "path to sdcc executable" FORCE)
-set(SDCC_LIB "C:/SDCC/lib" CACHE PATH "path to sdcc library directory" FORCE)
 
 ############# toolchain info, must come before project definition ##############
 set(CMAKE_SYSTEM_PROCESSOR BF7615BM44-LJTX)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_C_COMPILER ${SDCC_EXECUTABLE})
-set(CMAKE_FIND_ROOT_PATH ${SDCC_LIB})
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
-set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
-set(CMAKE_SHARED_LIBRARY_PREFIX "")         # lib
-set(CMAKE_SHARED_LIBRARY_SUFFIX ".lib")     # .so
-set(CMAKE_IMPORT_LIBRARY_PREFIX )
-set(CMAKE_IMPORT_LIBRARY_SUFFIX )
-set(CMAKE_EXECUTABLE_SUFFIX ".ihx")         # intel hex file
-set(CMAKE_LINK_LIBRARY_SUFFIX ".lib")
-set(CMAKE_DL_LIBS "")
-
-set(CMAKE_C_OUTPUT_EXTENSION ".rel")
 
 ############################## Version Forward Info #############################
 
@@ -43,34 +25,9 @@ add_compile_definitions(VERSION_MAJOR=${VERSION_MAJOR})
 add_compile_definitions(VERSION_MINOR=${VERSION_MINOR})
 add_compile_definitions(VERSION_PATCH=${VERSION_PATCH})
 
-# find sdcclib as CMAKE_AR
-# since cmake may already have searched for "ar", sdcclib has to
-# be searched with a different variable name (SDCCLIB_EXECUTABLE)
-# and must then be forced into the cache
-get_filename_component(SDCC_LOCATION "${CMAKE_C_COMPILER}" PATH)
-find_program(SDCCLIB_EXECUTABLE sdcclib PATHS "${SDCC_LOCATION}" NO_DEFAULT_PATH)
-find_program(SDCCLIB_EXECUTABLE sdcclib)
-set(CMAKE_AR "${SDCCLIB_EXECUTABLE}" CACHE FILEPATH "The sdcc librarian" FORCE)
-
 # preprocessor and linker flags
 set(CMAKE_C_FLAGS_INIT "--model-large -I. -I../Common/include -I../include -I../../Source/include --less-pedantic --xram-size 4352 --stack-auto --no-peep --int-long-reent --float-reent")
 set(CMAKE_EXE_LINKER_FLAGS_INIT "--model-large -I. -I../Common/include -I../include -I../../Source/include --less-pedantic --xram-size 4352 --stack-auto --no-peep --int-long-reent --float-reent")
-
-
-# compile a C file into an object file
-set(CMAKE_C_COMPILE_OBJECT  "<CMAKE_C_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-
-# link object files to an executable
-set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <OBJECTS> -o <TARGET> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>")
-
-# needs sdcc 2.7.0 + sddclib from cvs
-set(CMAKE_C_CREATE_STATIC_LIBRARY
-      "\"${CMAKE_COMMAND}\" -E remove <TARGET>"
-      "<CMAKE_AR> -a <TARGET> <LINK_FLAGS> <OBJECTS> ")
-
-# not supported by sdcc
-set(CMAKE_C_CREATE_SHARED_LIBRARY "")
-set(CMAKE_C_CREATE_MODULE_LIBRARY "")
 
 ############################## Project Definition ##############################
 
@@ -102,12 +59,11 @@ file(GLOB PROJECT_SOURCES
 )
 
 include_directories(
-    "C:/SDCC/include"
+    #"C:/SDCC/include"
     #"C:/SDCC/include/mcs51"
 	"Demo/Byd"
 	"Demo/Common/include"
 	"Source/include"
-
 )
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

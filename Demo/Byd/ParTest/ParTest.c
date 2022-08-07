@@ -33,12 +33,12 @@
 #define partstALL_OUTPUTS_OFF	( ( unsigned char ) 0xff )
 
 /* LED to output is dependent on how the LED's are wired. */
-#define partstOUTPUT_0			( ( unsigned char ) 0x02 )
-#define partstOUTPUT_1			( ( unsigned char ) 0x08 )
-#define partstOUTPUT_2			( ( unsigned char ) 0x20 )
-#define partstOUTPUT_3			( ( unsigned char ) 0x01 )
-#define partstOUTPUT_4			( ( unsigned char ) 0x04 )
-#define partstOUTPUT_5			( ( unsigned char ) 0x10 )
+#define partstOUTPUT_0			( ( unsigned char ) 0x01 )
+#define partstOUTPUT_1			( ( unsigned char ) 0x02 )
+#define partstOUTPUT_2			( ( unsigned char ) 0x04 )
+#define partstOUTPUT_3			( ( unsigned char ) 0x08 )
+#define partstOUTPUT_4			( ( unsigned char ) 0x10 )
+#define partstOUTPUT_5			( ( unsigned char ) 0x20 )
 #define partstOUTPUT_6			( ( unsigned char ) 0x40 )
 #define partstOUTPUT_7			( ( unsigned char ) 0x80 )
 

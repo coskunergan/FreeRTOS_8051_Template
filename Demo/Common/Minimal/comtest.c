@@ -73,8 +73,8 @@
 
 /* The Tx task will transmit the sequence of characters at a pseudo random
  * interval.  This is the maximum and minimum block time between sends. */
-#define comTX_MAX_BLOCK_TIME           ( ( TickType_t ) 0x96 )
-#define comTX_MIN_BLOCK_TIME           ( ( TickType_t ) 0x32 )
+#define comTX_MAX_BLOCK_TIME           ( ( TickType_t ) 0x96 / portTICK_PERIOD_MS)
+#define comTX_MIN_BLOCK_TIME           ( ( TickType_t ) 0x32 / portTICK_PERIOD_MS)
 #define comOFFSET_TIME                 ( ( TickType_t ) 3 )
 
 /* We should find that each character can be queued for Tx immediately and we

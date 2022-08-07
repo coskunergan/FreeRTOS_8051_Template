@@ -90,11 +90,11 @@
 
 /* Toggle rate for the on board LED - which is dependent on whether or not
 an error has been detected. */
-#define mainNO_ERROR_FLASH_PERIOD	( ( TickType_t ) 100 )
-#define mainERROR_FLASH_PERIOD		( ( TickType_t ) 5 )
+#define mainNO_ERROR_FLASH_PERIOD	( ( TickType_t ) 1500 / portTICK_PERIOD_MS )
+#define mainERROR_FLASH_PERIOD		( ( TickType_t ) 50 / portTICK_PERIOD_MS )
 
 /* Baud rate used by the serial port tasks. */
-#define mainCOM_TEST_BAUD_RATE		( ( unsigned long ) 4800 )
+#define mainCOM_TEST_BAUD_RATE		( ( unsigned long ) 115200 )
 
 /* Pass an invalid LED number to the COM test task as we don't want it to flash
 an LED.  There are only 8 LEDs (excluding the on board LED) wired in and these
@@ -170,7 +170,7 @@ void main(void)
     vParTestInitialise();
 
     /* Start the used standard demo tasks. */
-    //vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
+    vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
     vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
     vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
