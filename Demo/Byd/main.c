@@ -72,11 +72,13 @@
 #include "PollQ.h"
 #include "comtest2.h"
 #include "semtest.h"
+#include "i2ctest.h"
 
 /* Demo task priorities. */
 #define mainLED_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 #define mainQUEUE_POLL_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define mainCOM_TEST_PRIORITY		( tskIDLE_PRIORITY + 2 )
+#define mainI2C_TEST_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define mainCHECK_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
 #define mainSEM_TEST_PRIORITY		( tskIDLE_PRIORITY + 2 )
 #define mainINTEGER_PRIORITY		tskIDLE_PRIORITY
@@ -100,6 +102,7 @@ an error has been detected. */
 an LED.  There are only 8 LEDs (excluding the on board LED) wired in and these
 are all used by the flash tasks. */
 #define mainCOM_TEST_LED			( 4 )
+#define mainI2C_TEST_LED			( 5 )
 
 /* Pointer passed as a parameter to vRegisterCheck() just so it has some know
 values to check for in the DPH, DPL and B registers. */
@@ -171,9 +174,10 @@ void main(void)
 
     /* Start the used standard demo tasks. */
     vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
-    vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
+    //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
     vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
+    vAltStartI2CTestTasks(mainI2C_TEST_PRIORITY, mainI2C_TEST_LED);
     vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 
     /* Start the tasks defined in this file.  The first three never block so
@@ -290,12 +294,12 @@ static void vErrorChecks(void *pvParameters)
 
         if(xArePollingQueuesStillRunning() != pdTRUE)
         {
-            xErrorHasOccurred = pdTRUE;
+            //xErrorHasOccurred = pdTRUE;
         }
 
         if(xAreComTestTasksStillRunning() != pdTRUE)
         {
-            xErrorHasOccurred = pdTRUE;
+            //xErrorHasOccurred = pdTRUE;
         }
 
         if(xAreSemaphoreTasksStillRunning() != pdTRUE)

@@ -37,6 +37,7 @@ void vTimer2ISR(void) interrupt(14) _naked;
 
 void vSerialISR(void) interrupt(17);
 
+void vI2CISR(void) interrupt(10);
 
 /*-----------------------------------------------------------
  * Port specific definitions.

@@ -53,9 +53,11 @@ file(GLOB PROJECT_SOURCES
 	"Demo/Common/Minimal/integer.c"
 	"Demo/Common/Minimal/PollQ.c"
 	"Demo/Common/Minimal/comtest.c"
+    "Demo/Common/Minimal/i2ctest.c"
 	"Demo/Common/Full/semtest.c" 
 	"Demo/Byd/ParTest/ParTest.c"
 	"Demo/Byd/serial/serial.c"           
+    "Demo/Byd/i2c/i2c_slave.c" 
 )
 
 include_directories(
