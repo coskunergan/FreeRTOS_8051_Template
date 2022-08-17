@@ -58,6 +58,7 @@ file(GLOB PROJECT_SOURCES
 	"Demo/Byd/ParTest/ParTest.c"
 	"Demo/Byd/serial/serial.c"           
     "Demo/Byd/i2c/i2c_slave.c" 
+    "Demo/Byd/i2c/i2c_master.c" 
 )
 
 include_directories(

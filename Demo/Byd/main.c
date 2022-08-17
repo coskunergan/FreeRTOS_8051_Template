@@ -176,7 +176,7 @@ void main(void)
     vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
     //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
-    vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
+    //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
     vAltStartI2CTestTasks(mainI2C_TEST_PRIORITY, mainI2C_TEST_LED);
     vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 

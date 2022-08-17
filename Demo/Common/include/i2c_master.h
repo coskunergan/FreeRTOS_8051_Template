@@ -24,10 +24,28 @@
  *
  */
 
-#ifndef I2C_SLAVE_H
-#define I2C_SLAVE_H
+#ifndef I2C_MASTER_H
+#define I2C_MASTER_H
 
-void xI2CSlaveInitMinimal( void );
-void vI2CSlaveClose( void );
+#include "FreeRTOS.h"
 
-#endif /* ifndef I2C_SLAVE_H */
+#define SET_SDA()   DATAF |= 0x20
+#define CLR_SDA()   DATAF &= ~0x20
+#define OUT_SDA()   /*SET_PE5_PU_ON;*/SET_PF5_IO_OUT
+#define IN_SDA()    /*SET_PE5_PU_ON;*/SET_PF5_IO_IN
+#define SDA()       DATAE & 0x20
+
+#define SET_SCL()   DATAF |= 0x10
+#define CLR_SCL()   DATAF &= ~0x10
+#define OUT_SCL()   /*SET_PE4_PU_ON;*/SET_PF4_IO_OUT
+#define IN_SCL()    /*SET_PE4_PU_ON;*/SET_PF4_IO_IN
+
+#define NACK    1
+#define ACK     0
+
+void xI2CMasterInitMinimal( void );
+void vI2CMasterWriteData(uint8_t deviceAddr, uint8_t *dataSource, uint8_t lengthOfData);
+void vI2CMasterReadData(uint8_t deviceAddr, uint8_t *target, uint8_t lengthOfData);
+void vI2CMasterClose( void );
+
+#endif /* ifndef I2C_MASTER_H */

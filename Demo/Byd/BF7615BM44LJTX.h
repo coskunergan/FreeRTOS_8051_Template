@@ -332,5 +332,135 @@ SBIT(SCI_TE, 0x98, 7);
 #define DAC1_PAGE         0x01     /* DAC 1                              */
 #define PCA0_PAGE         0x00     /* PCA 0                              */
 #define PLL0_PAGE         0x0F     /* PLL 0                              */
+/////////////////////////////////////////////////////////////////////
+#define SET_PA0_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x80;TRISA |= 0x01
+#define SET_PA1_IO_IN TRISA |= 0x02
+#define SET_PA2_IO_IN TRISA |= 0x04
+#define SET_PA3_IO_IN TRISA |= 0x08
 
+#define SET_PA0_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x80;TRISA &= ~0x01
+#define SET_PA1_IO_OUT TRISA &= ~0x02
+#define SET_PA2_IO_OUT TRISA &= ~0x04
+#define SET_PA3_IO_OUT TRISA &= ~0x08
+/////////////////////////////////////////////////////////////////////
+#define SET_PB0_IO_IN TRISB |= 0x01
+#define SET_PB1_IO_IN TRISB |= 0x02
+#define SET_PB2_IO_IN REG_ADDR = 0x26;REG_DATA &= ~0x01;TRISB |= 0x04
+#define SET_PB3_IO_IN REG_ADDR = 0x26;REG_DATA &= ~0x02;TRISB |= 0x08
+#define SET_PB4_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x01;REG_ADDR = 0x26;REG_DATA &= ~0x04;TRISB |= 0x10
+#define SET_PB5_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x08;REG_ADDR = 0x26;REG_DATA &= ~0x08;TRISB |= 0x20
+#define SET_PB6_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x02;REG_ADDR = 0x26;REG_DATA &= ~0x10;TRISB |= 0x40
+#define SET_PB7_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x10;REG_ADDR = 0x26;REG_DATA &= ~0x20;TRISB |= 0x80
+
+#define SET_PB0_IO_OUT TRISB &= ~0x01
+#define SET_PB1_IO_OUT TRISB &= ~0x02
+#define SET_PB2_IO_OUT REG_ADDR = 0x26;REG_DATA &= ~0x01;TRISB &= ~0x04
+#define SET_PB3_IO_OUT REG_ADDR = 0x26;REG_DATA &= ~0x02;TRISB &= ~0x08
+#define SET_PB4_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x01;REG_ADDR = 0x26;REG_DATA &= ~0x04;TRISB &= ~0x10
+#define SET_PB5_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x08;REG_ADDR = 0x26;REG_DATA &= ~0x08;TRISB &= ~0x20
+#define SET_PB6_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x02;REG_ADDR = 0x26;REG_DATA &= ~0x10;TRISB &= ~0x40
+#define SET_PB7_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x10;REG_ADDR = 0x26;REG_DATA &= ~0x20;TRISB &= ~0x80
+/////////////////////////////////////////////////////////////////////
+#define SET_PC0_IO_IN TRISC |= 0x01
+#define SET_PC1_IO_IN TRISC |= 0x02
+#define SET_PC2_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x04;TRISC |= 0x04
+#define SET_PC3_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x20;TRISC |= 0x08
+#define SET_PC4_IO_IN REG_ADDR = 0x26;REG_DATA &= ~0x40;TRISC |= 0x10
+#define SET_PC5_IO_IN REG_ADDR = 0x26;REG_DATA &= ~0x80;TRISC |= 0x20
+#define SET_PC6_IO_IN TRISC |= 0x40
+#define SET_PC7_IO_IN TRISC |= 0x80
+
+#define SET_PC0_IO_OUT TRISC &= ~0x01
+#define SET_PC1_IO_OUT TRISC &= ~0x02
+#define SET_PC2_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x04;TRISC &= ~0x04
+#define SET_PC3_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x20;TRISC &= ~0x08
+#define SET_PC4_IO_OUT REG_ADDR = 0x26;REG_DATA &= ~0x40;TRISC &= ~0x10
+#define SET_PC5_IO_OUT REG_ADDR = 0x26;REG_DATA &= ~0x80;TRISC &= ~0x20
+#define SET_PC6_IO_OUT TRISC &= ~0x40
+#define SET_PC7_IO_OUT TRISC &= ~0x80
+/////////////////////////////////////////////////////////////////////
+#define SET_PD0_IO_IN TRISD |= 0x01
+#define SET_PD1_IO_IN TRISD |= 0x02
+#define SET_PD2_IO_IN TRISD |= 0x04
+#define SET_PD3_IO_IN TRISD |= 0x08
+#define SET_PD4_IO_IN TRISD |= 0x10
+#define SET_PD5_IO_IN TRISD |= 0x20
+#define SET_PD6_IO_IN TRISD |= 0x40
+#define SET_PD7_IO_IN TRISD |= 0x80
+
+#define SET_PD0_IO_OUT TRISD &= ~0x01
+#define SET_PD1_IO_OUT TRISD &= ~0x02
+#define SET_PD2_IO_OUT TRISD &= ~0x04
+#define SET_PD3_IO_OUT TRISD &= ~0x08
+#define SET_PD4_IO_OUT TRISD &= ~0x10
+#define SET_PD5_IO_OUT TRISD &= ~0x20
+#define SET_PD6_IO_OUT TRISD &= ~0x40
+#define SET_PD7_IO_OUT TRISD &= ~0x80
+/////////////////////////////////////////////////////////////////////
+#define SET_PE0_IO_IN TRISE |= 0x01
+#define SET_PE1_IO_IN TRISE |= 0x02
+#define SET_PE2_IO_IN TRISE |= 0x04
+#define SET_PE3_IO_IN TRISE |= 0x08
+#define SET_PE4_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x01;TRISE |= 0x10
+#define SET_PE5_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x02;TRISE |= 0x20
+#define SET_PE6_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x04;TRISE |= 0x40
+#define SET_PE7_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x08;TRISE |= 0x80
+
+#define SET_PE0_IO_OUT TRISE &= ~0x01
+#define SET_PE1_IO_OUT TRISE &= ~0x02
+#define SET_PE2_IO_OUT TRISE &= ~0x04
+#define SET_PE3_IO_OUT TRISE &= ~0x08
+#define SET_PE4_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x01;TRISE &= ~0x10
+#define SET_PE5_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x02;TRISE &= ~0x20
+#define SET_PE6_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x04;TRISE &= ~0x40
+#define SET_PE7_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x08;TRISE &= ~0x80
+/////////////////////////////////////////////////////////////////////
+#define SET_PF0_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x10;TRISF |= 0x01
+#define SET_PF1_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x20;TRISF |= 0x02
+#define SET_PF2_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x40;TRISF |= 0x04
+#define SET_PF3_IO_IN REG_ADDR = 0x27;REG_DATA &= ~0x80;TRISF |= 0x08
+#define SET_PF4_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x01;TRISF |= 0x10
+#define SET_PF5_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x02;TRISF |= 0x20
+#define SET_PF6_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x04;TRISF |= 0x40
+#define SET_PF7_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x08;TRISF |= 0x80
+
+#define SET_PF0_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x10;TRISF &= ~0x01
+#define SET_PF1_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x20;TRISF &= ~0x02
+#define SET_PF2_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x40;TRISF &= ~0x04
+#define SET_PF3_IO_OUT REG_ADDR = 0x27;REG_DATA &= ~0x80;TRISF &= ~0x08
+#define SET_PF4_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x01;TRISF &= ~0x10
+#define SET_PF5_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x02;TRISF &= ~0x20
+#define SET_PF6_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x04;TRISF &= ~0x40
+#define SET_PF7_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x08;TRISF &= ~0x80
+/////////////////////////////////////////////////////////////////////
+#define SET_PG0_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x10;TRISG |= 0x01
+#define SET_PG1_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x20;TRISG |= 0x02
+#define SET_PG2_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x40;TRISG |= 0x04
+#define SET_PG3_IO_IN REG_ADDR = 0x28;REG_DATA &= ~0x80;TRISG |= 0x08
+#define SET_PG4_IO_IN TRISG |= 0x10
+
+#define SET_PG0_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x10;TRISG &= ~0x01
+#define SET_PG1_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x20;TRISG &= ~0x02
+#define SET_PG2_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x40;TRISG &= ~0x04
+#define SET_PG3_IO_OUT REG_ADDR = 0x28;REG_DATA &= ~0x80;TRISG &= ~0x08
+#define SET_PG4_IO_OUT TRISG &= ~0x1
+/////////////////////////////////////////////////////////////////////
+#define SET_PH0_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x01;TRISH |= 0x01
+#define SET_PH1_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x02;TRISH |= 0x02
+#define SET_PH2_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x04;TRISH |= 0x04
+#define SET_PH3_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x08;TRISH |= 0x08
+#define SET_PH4_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x10;TRISH |= 0x10
+#define SET_PH5_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x20;TRISH |= 0x20
+#define SET_PH6_IO_IN REG_ADDR = 0x29;REG_DATA &= ~0x40;TRISH |= 0x40
+#define SET_PH7_IO_IN REG_ADDR = 0x33;REG_DATA &= ~0x40;REG_ADDR = 0x29;REG_DATA &= ~0x80;TRISH |= 0x80
+
+#define SET_PH0_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x01;TRISH &= ~0x01
+#define SET_PH1_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x02;TRISH &= ~0x02
+#define SET_PH2_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x04;TRISH &= ~0x04
+#define SET_PH3_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x08;TRISH &= ~0x08
+#define SET_PH4_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x10;TRISH &= ~0x10
+#define SET_PH5_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x20;TRISH &= ~0x20
+#define SET_PH6_IO_OUT REG_ADDR = 0x29;REG_DATA &= ~0x40;TRISH &= ~0x40
+#define SET_PH7_IO_OUT REG_ADDR = 0x33;REG_DATA &= ~0x40;REG_ADDR = 0x29;REG_DATA &= ~0x80;TRISH &= ~0x80
+/////////////////////////////////////////////////////////////////////
 #endif

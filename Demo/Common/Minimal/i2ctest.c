@@ -63,6 +63,7 @@
 
 /* Demo program include files. */
 #include "i2c_slave.h"
+#include "i2c_master.h"
 #include "i2ctest.h"
 #include "serial.h"
 #include "partest.h"
@@ -72,10 +73,12 @@
 #define comTOTAL_PERMISSIBLE_ERRORS      ( 2 )
 
 
-extern uint8_t I2CMasterWriteBuffer[];
-extern uint8_t I2CMasterReadBuffer[];
-extern uint8_t I2CMasterWriteBufferIndex;
-extern uint8_t I2CMasterReadBufferIndex;
+uint8_t I2CMasterWriteBuffer[8];
+uint8_t I2CMasterReadBuffer[8];
+
+extern uint8_t I2CSlaveReadBuffer[];
+extern uint8_t I2CSlaveWriteBuffer[];
+
 
 /* The transmit task as described at the top of the file. */
 static portTASK_FUNCTION_PROTO(vI2CSlave, pvParameters);
@@ -93,7 +96,9 @@ void vAltStartI2CTestTasks(UBaseType_t uxPriority,
     /* Initialise the com port then spawn the Rx and Tx tasks. */
     uxBaseLED = uxLED;
 
-    xI2CPortInitMinimal();
+    xI2CSlaveInitMinimal();
+
+    xI2CMasterInitMinimal();
 
     /* The Tx task is spawned with a lower priority than the Rx task. */
     xTaskCreate(vI2CSlave, "I2CSlave", comSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
@@ -107,16 +112,27 @@ static portTASK_FUNCTION(vI2CSlave, pvParameters)
     /* Just to stop compiler warnings. */
     (void) pvParameters;
 
+    I2CMasterWriteBuffer[0]=1;
+    I2CMasterWriteBuffer[1]=2;
+    I2CMasterWriteBuffer[2]=3;
+    I2CMasterWriteBuffer[3]=4;
+    I2CMasterWriteBuffer[4]=5;
+    I2CMasterWriteBuffer[5]=6;
+
     for(; ;)
     {
         vParTestToggleLED(uxBaseLED + comDATA_LED_OFFSET);
 
-        /* Turn the LED off while we are not doing anything. */
-        vParTestSetLED(uxBaseLED + comDATA_LED_OFFSET, pdFALSE);
+        vI2CMasterWriteData(0xC0, I2CMasterWriteBuffer, 6);
+        
+        vTaskDelay(10);
 
-        xSerialPutChar(NULL, I2CMasterWriteBuffer[0], 0);
-
-        vTaskDelay(100);
+        I2CMasterWriteBuffer[0] = I2CSlaveWriteBuffer[0] + 1;
+        I2CMasterWriteBuffer[1] = I2CSlaveWriteBuffer[1] + 1;
+        I2CMasterWriteBuffer[2] = I2CSlaveWriteBuffer[2] + 1;
+        I2CMasterWriteBuffer[3] = I2CSlaveWriteBuffer[3] + 1;
+        I2CMasterWriteBuffer[4] = I2CSlaveWriteBuffer[4] + 1;
+        I2CMasterWriteBuffer[5] = I2CSlaveWriteBuffer[5] + 1;        
     }
 } /*lint !e715 !e818 pvParameters is required for a task function even if it is not referenced. */
 /*-----------------------------------------------------------*/

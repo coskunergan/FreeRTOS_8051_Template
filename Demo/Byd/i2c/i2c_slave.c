@@ -35,19 +35,18 @@
 #define I2C_MASTER_WRITE_BUFFER_SIZE  8
 #define I2C_MASTER_READ_BUFFER_SIZE   6
 
-#define I2C_PORT 1 // PE4/5
-//#define I2C_PORT 0 // PC4/5
-#define I2C_ADDRESS 0xC1
+//#define I2C_PORT 1 // PE4/5
+#define I2C_PORT 0 // PC4/5
+#define I2C_ADDRESS 0xC0
 
-/*static */uint8_t I2CMasterWriteBuffer[I2C_MASTER_WRITE_BUFFER_SIZE];
-/*static */uint8_t I2CMasterReadBuffer[I2C_MASTER_READ_BUFFER_SIZE];
- 
-/*static */uint8_t I2CMasterWriteBufferIndex;
-/*static */uint8_t I2CMasterReadBufferIndex;
+/*static */uint8_t I2CSlaveWriteBuffer[I2C_MASTER_WRITE_BUFFER_SIZE];
+/*static */uint8_t I2CSlaveReadBuffer[I2C_MASTER_READ_BUFFER_SIZE];
+/*static */uint8_t I2CSlaveWriteBufferIndex;
+/*static */uint8_t I2CSlaveReadBufferIndex;
 
 /*-----------------------------------------------------------*/
 
-xI2CPortHandle xI2CPortInitMinimal(void)
+void xI2CSlaveInitMinimal(void)
 {
     uint8_t ucOriginalSFRPage;
 
@@ -56,8 +55,8 @@ xI2CPortHandle xI2CPortInitMinimal(void)
     portENTER_CRITICAL();
     {
         SFRPAGE = 0;
-        I2CMasterWriteBufferIndex = 0;
-        I2CMasterReadBufferIndex = 0;
+        I2CSlaveWriteBufferIndex = 0;
+        I2CSlaveReadBufferIndex = 0;
 
         EA = 0;
         IPL1 |= 0x08;
@@ -111,8 +110,6 @@ xI2CPortHandle xI2CPortInitMinimal(void)
     portEXIT_CRITICAL();
 
     SFRPAGE = ucOriginalSFRPage;
-
-    return NULL;
 }
 /*-----------------------------------------------------------*/
 
@@ -122,7 +119,7 @@ void vI2CISR(void) interrupt(10)
     uint8_t ucOriginalSFRPage;
 
     ucOriginalSFRPage = SFRPAGE;
-
+    
     portENTER_CRITICAL();
     {
         IRCON1 &= ~0x08;
@@ -135,40 +132,40 @@ void vI2CISR(void) interrupt(10)
             IICSTAT &= ~0x01;
             temp = IICBUF;
         }
-        if(IICSTAT & 0x10 == 0)
+        if((IICSTAT & 0x10) == 0)
         {
-            I2CMasterWriteBufferIndex = 0;
-            I2CMasterReadBufferIndex = 0;
-
+            I2CSlaveWriteBufferIndex = 0;
+            I2CSlaveReadBufferIndex = 0;
+                        
             if(IICSTAT & 0x20)
-            {
-                IICBUF = I2CMasterReadBuffer[I2CMasterReadBufferIndex];
+            {            
+                IICBUF = I2CSlaveReadBuffer[I2CSlaveReadBufferIndex];
                 IICCON |= 0x04;
             }
             else
             {
-                I2CMasterWriteBuffer[I2CMasterWriteBufferIndex] = IICBUF;
+                I2CSlaveWriteBuffer[I2CSlaveWriteBufferIndex] = IICBUF;                             
             }
         }
         else
         {
             if(IICSTAT & 0x20)// RW
             {
-                IICBUF = I2CMasterReadBuffer[I2CMasterReadBufferIndex];
-                if(++I2CMasterWriteBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
+                IICBUF = I2CSlaveReadBuffer[I2CSlaveReadBufferIndex];
+                if(++I2CSlaveReadBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
                 {
-                    I2CMasterWriteBufferIndex = 0;
+                    I2CSlaveReadBufferIndex = 0;
                 }
                 IICCON |= 0x04;
             }
             else
             {
                 if(IICSTAT & 0x08) // BF
-                {
-                    I2CMasterWriteBuffer[I2CMasterWriteBufferIndex] = IICBUF;
-                    if(++I2CMasterWriteBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
+                {                    
+                    I2CSlaveWriteBuffer[I2CSlaveWriteBufferIndex] = IICBUF;
+                    if(++I2CSlaveWriteBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
                     {
-                        I2CMasterWriteBufferIndex = 0;
+                        I2CSlaveWriteBufferIndex = 0;
                     }
                 }
             }
@@ -183,10 +180,9 @@ void vI2CISR(void) interrupt(10)
 
 /*-----------------------------------------------------------*/
 
-void vI2CClose(xI2CPortHandle xPort)
+void vI2CSlaveClose( void )
 {
-    /* Not implemented in this port. */
-    (void) xPort;
+    
 }
 /*-----------------------------------------------------------*/
 
