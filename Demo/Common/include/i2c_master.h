@@ -33,7 +33,7 @@
 #define CLR_SDA()   DATAF &= ~0x20
 #define OUT_SDA()   /*SET_PE5_PU_ON;*/SET_PF5_IO_OUT
 #define IN_SDA()    /*SET_PE5_PU_ON;*/SET_PF5_IO_IN
-#define SDA()       DATAE & 0x20
+#define SDA()       DATAF & 0x20
 
 #define SET_SCL()   DATAF |= 0x10
 #define CLR_SCL()   DATAF &= ~0x10

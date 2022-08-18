@@ -177,7 +177,7 @@ void main(void)
     //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
     //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
-    vAltStartI2CTestTasks(mainI2C_TEST_PRIORITY, mainI2C_TEST_LED);
+    vStartI2CTestTasks(mainI2C_TEST_PRIORITY, mainI2C_TEST_LED);
     vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 
     /* Start the tasks defined in this file.  The first three never block so

@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 /* Demo program include files. */
 #include "i2c_slave.h"
@@ -68,20 +69,21 @@
 #include "serial.h"
 #include "partest.h"
 
-#define comSTACK_SIZE                  configMINIMAL_STACK_SIZE
-#define comDATA_LED_OFFSET               ( 0 )
-#define comTOTAL_PERMISSIBLE_ERRORS      ( 2 )
+#define i2cSTACK_SIZE                  configMINIMAL_STACK_SIZE
+#define i2cDATA_LED_OFFSET               ( 0 )
+#define i2cTOTAL_PERMISSIBLE_ERRORS      ( 2 )
 
+SemaphoreHandle_t xSlaveReceivedSemaphore;
+SemaphoreHandle_t xSlaveTransmidSemaphore;
 
-uint8_t I2CMasterWriteBuffer[8];
-uint8_t I2CMasterReadBuffer[8];
+uint8_t I2CTempBuffer[6];
 
-extern uint8_t I2CSlaveReadBuffer[];
-extern uint8_t I2CSlaveWriteBuffer[];
-
+extern QueueHandle_t xSlaveReceivedQueue;
+extern QueueHandle_t xSlaveTransmidQueue;
 
 /* The transmit task as described at the top of the file. */
-static portTASK_FUNCTION_PROTO(vI2CSlave, pvParameters);
+static portTASK_FUNCTION_PROTO(vSlaveReceived, pvParameters);
+static portTASK_FUNCTION_PROTO(vSlaveTransmid, pvParameters);
 
 /* The LED that should be toggled by the Rx and Tx tasks.  The Rx task will
  * toggle LED ( uxBaseLED + comRX_LED_OFFSET).  The Tx task will toggle LED
@@ -90,8 +92,8 @@ static UBaseType_t uxBaseLED = 0;
 
 /*-----------------------------------------------------------*/
 
-void vAltStartI2CTestTasks(UBaseType_t uxPriority,
-                           UBaseType_t uxLED)
+void vStartI2CTestTasks(UBaseType_t uxPriority,
+                        UBaseType_t uxLED)
 {
     /* Initialise the com port then spawn the Rx and Tx tasks. */
     uxBaseLED = uxLED;
@@ -100,42 +102,70 @@ void vAltStartI2CTestTasks(UBaseType_t uxPriority,
 
     xI2CMasterInitMinimal();
 
+    SET_PB0_IO_OUT;
+    PB0 = 0;
+
+    vSemaphoreCreateBinary(xSlaveTransmidSemaphore);
+
+    vSemaphoreCreateBinary(xSlaveReceivedSemaphore);
+
     /* The Tx task is spawned with a lower priority than the Rx task. */
-    xTaskCreate(vI2CSlave, "I2CSlave", comSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
+    xTaskCreate(vSlaveReceived, "I2C_RCV", i2cSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
+    xTaskCreate(vSlaveTransmid, "I2C_TRD", i2cSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
 }
 /*-----------------------------------------------------------*/
 
-static portTASK_FUNCTION(vI2CSlave, pvParameters)
+static portTASK_FUNCTION(vSlaveReceived, pvParameters)
 {
-    TickType_t xTimeToWait = 10;
+    uint8_t temp = 0, i;
 
-    /* Just to stop compiler warnings. */
     (void) pvParameters;
-
-    I2CMasterWriteBuffer[0]=1;
-    I2CMasterWriteBuffer[1]=2;
-    I2CMasterWriteBuffer[2]=3;
-    I2CMasterWriteBuffer[3]=4;
-    I2CMasterWriteBuffer[4]=5;
-    I2CMasterWriteBuffer[5]=6;
 
     for(; ;)
     {
-        vParTestToggleLED(uxBaseLED + comDATA_LED_OFFSET);
+        if(xSemaphoreTake(xSlaveReceivedSemaphore, portMAX_DELAY) == pdPASS)
+        {
+            i = 0;
+            while(xQueueReceive(xSlaveReceivedQueue, &temp, 0) == (portBASE_TYPE) pdTRUE)
+            {
+                temp += 1;
+                I2CTempBuffer[i++] = temp;
+                xQueueSend(xSlaveTransmidQueue, &temp, 0);
+                vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
+            }
 
-        vI2CMasterWriteData(0xC0, I2CMasterWriteBuffer, 6);
-        
-        vTaskDelay(10);
+            vI2CMasterReadData(0xC0, I2CTempBuffer, 6);
 
-        I2CMasterWriteBuffer[0] = I2CSlaveWriteBuffer[0] + 1;
-        I2CMasterWriteBuffer[1] = I2CSlaveWriteBuffer[1] + 1;
-        I2CMasterWriteBuffer[2] = I2CSlaveWriteBuffer[2] + 1;
-        I2CMasterWriteBuffer[3] = I2CSlaveWriteBuffer[3] + 1;
-        I2CMasterWriteBuffer[4] = I2CSlaveWriteBuffer[4] + 1;
-        I2CMasterWriteBuffer[5] = I2CSlaveWriteBuffer[5] + 1;        
+            vTaskDelay(50); // 100ms
+        }
     }
-} /*lint !e715 !e818 pvParameters is required for a task function even if it is not referenced. */
+}
 /*-----------------------------------------------------------*/
+
+static portTASK_FUNCTION(vSlaveTransmid, pvParameters)
+{
+    uint8_t temp = 0x55;
+    (void) pvParameters;
+
+    I2CTempBuffer[0] = 1;
+    I2CTempBuffer[1] = 2;
+    I2CTempBuffer[2] = 3;
+    I2CTempBuffer[3] = 4;
+    I2CTempBuffer[4] = 5;
+    I2CTempBuffer[5] = 6;
+
+    for(; ;)
+    {
+        if(xSemaphoreTake(xSlaveTransmidSemaphore, portMAX_DELAY) == pdPASS)
+        {
+            vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
+
+            vI2CMasterWriteData(0xC0, I2CTempBuffer, 6);
+
+            vTaskDelay(50); // 100ms
+        }
+    }
+}
 
 // static portTASK_FUNCTION( vI2CRxTask, pvParameters )
 // {

@@ -27,7 +27,7 @@
 #ifndef I2CTEST_H
 #define I2CTEST_H
 
-void vAltStartI2CTestTasks( UBaseType_t uxPriority,
+void vStartI2CTestTasks( UBaseType_t uxPriority,
                             UBaseType_t uxLED );
 BaseType_t xAreI2CTestTasksStillRunning( void );
 

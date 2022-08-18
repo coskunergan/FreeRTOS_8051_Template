@@ -30,19 +30,24 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "semphr.h"
 #include "i2c_slave.h"
 
-#define I2C_MASTER_WRITE_BUFFER_SIZE  8
-#define I2C_MASTER_READ_BUFFER_SIZE   6
+#define I2C_SLAVE_TRANSMID_BUFFER_SIZE  6
+#define I2C_SLAVE_RECEIVED_BUFFER_SIZE  6
 
 //#define I2C_PORT 1 // PE4/5
 #define I2C_PORT 0 // PC4/5
 #define I2C_ADDRESS 0xC0
 
-/*static */uint8_t I2CSlaveWriteBuffer[I2C_MASTER_WRITE_BUFFER_SIZE];
-/*static */uint8_t I2CSlaveReadBuffer[I2C_MASTER_READ_BUFFER_SIZE];
-/*static */uint8_t I2CSlaveWriteBufferIndex;
-/*static */uint8_t I2CSlaveReadBufferIndex;
+QueueHandle_t xSlaveReceivedQueue;
+QueueHandle_t xSlaveTransmidQueue;
+
+static uint8_t I2CSlaveTransmidBufferIndex;
+static uint8_t I2CSlaveReceivedBufferIndex;
+
+extern SemaphoreHandle_t xSlaveReceivedSemaphore;
+extern SemaphoreHandle_t xSlaveTransmidSemaphore;
 
 /*-----------------------------------------------------------*/
 
@@ -55,8 +60,11 @@ void xI2CSlaveInitMinimal(void)
     portENTER_CRITICAL();
     {
         SFRPAGE = 0;
-        I2CSlaveWriteBufferIndex = 0;
-        I2CSlaveReadBufferIndex = 0;
+        I2CSlaveReceivedBufferIndex = 0;
+        I2CSlaveTransmidBufferIndex = 0;
+
+        xSlaveReceivedQueue = xQueueCreate(I2C_SLAVE_TRANSMID_BUFFER_SIZE, (unsigned portBASE_TYPE) sizeof(uint8_t));
+        xSlaveTransmidQueue = xQueueCreate(I2C_SLAVE_RECEIVED_BUFFER_SIZE, (unsigned portBASE_TYPE) sizeof(uint8_t));
 
         EA = 0;
         IPL1 |= 0x08;
@@ -96,7 +104,6 @@ void xI2CSlaveInitMinimal(void)
         REG_ADDR = 0x34;
         REG_DATA &= ~(0x10);
 #endif
-
         IICADD = I2C_ADDRESS;
         IICSTAT = 0x00;
         IICCON |= 0x01;
@@ -117,11 +124,13 @@ void vI2CISR(void) interrupt(10)
 {
     uint8_t temp;
     uint8_t ucOriginalSFRPage;
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
-    ucOriginalSFRPage = SFRPAGE;
-    
     portENTER_CRITICAL();
     {
+        PB0 = 1;
+        ucOriginalSFRPage = SFRPAGE;
+        PB0 = 0;
         IRCON1 &= ~0x08;
         if(IICSTAT & 0x02)
         {
@@ -134,59 +143,75 @@ void vI2CISR(void) interrupt(10)
         }
         if((IICSTAT & 0x10) == 0)
         {
-            I2CSlaveWriteBufferIndex = 0;
-            I2CSlaveReadBufferIndex = 0;
-                        
+            I2CSlaveReceivedBufferIndex = 0;
+            I2CSlaveTransmidBufferIndex = 0;
+
             if(IICSTAT & 0x20)
-            {            
-                IICBUF = I2CSlaveReadBuffer[I2CSlaveReadBufferIndex];
+            {
+                if(xQueueReceiveFromISR(xSlaveTransmidQueue, &temp, &xHigherPriorityTaskWoken) == (portBASE_TYPE) pdTRUE)
+                {
+                    IICBUF = temp;
+                }
                 IICCON |= 0x04;
             }
             else
             {
-                I2CSlaveWriteBuffer[I2CSlaveWriteBufferIndex] = IICBUF;                             
+                temp = IICBUF;
             }
         }
         else
         {
             if(IICSTAT & 0x20)// RW
             {
-                IICBUF = I2CSlaveReadBuffer[I2CSlaveReadBufferIndex];
-                if(++I2CSlaveReadBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
+                if(xQueueReceiveFromISR(xSlaveTransmidQueue, &temp, &xHigherPriorityTaskWoken) == (portBASE_TYPE) pdTRUE)
                 {
-                    I2CSlaveReadBufferIndex = 0;
+                    IICBUF = temp;
+                }
+                if(++I2CSlaveTransmidBufferIndex >= I2C_SLAVE_TRANSMID_BUFFER_SIZE)
+                {
+                    I2CSlaveTransmidBufferIndex = 0;
                 }
                 IICCON |= 0x04;
             }
             else
             {
                 if(IICSTAT & 0x08) // BF
-                {                    
-                    I2CSlaveWriteBuffer[I2CSlaveWriteBufferIndex] = IICBUF;
-                    if(++I2CSlaveWriteBufferIndex >= I2C_MASTER_WRITE_BUFFER_SIZE)
+                {
+                    temp = IICBUF;
+                    xQueueSendFromISR(xSlaveReceivedQueue, &temp, &xHigherPriorityTaskWoken);
+                    if(++I2CSlaveReceivedBufferIndex >= I2C_SLAVE_RECEIVED_BUFFER_SIZE)
                     {
-                        I2CSlaveWriteBufferIndex = 0;
+                        I2CSlaveReceivedBufferIndex = 0;
+                        PB0 = 1;
+                        xSemaphoreGiveFromISR(xSlaveReceivedSemaphore, &xHigherPriorityTaskWoken);
+                        PB0 = 0;
                     }
+                }
+                else
+                {              
+                    PB0 = 1;
+                    xSemaphoreGiveFromISR(xSlaveTransmidSemaphore, &xHigherPriorityTaskWoken);
+                    PB0 = 0;
                 }
             }
         }
         IICCON |= 0x04;
+        if(xHigherPriorityTaskWoken)
+        {
+            portYIELD();
+        }
+        SFRPAGE = ucOriginalSFRPage;
     }
-
     portEXIT_CRITICAL();
-
-    SFRPAGE = ucOriginalSFRPage;
 }
 
 /*-----------------------------------------------------------*/
 
-void vI2CSlaveClose( void )
+void vI2CSlaveClose(void)
 {
-    
+
 }
+
 /*-----------------------------------------------------------*/
-
-
-
 
 
