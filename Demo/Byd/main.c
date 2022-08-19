@@ -174,11 +174,11 @@ void main(void)
 
     /* Start the used standard demo tasks. */
     vStartLEDFlashTasks(mainLED_TASK_PRIORITY);
-    //vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
+    vStartPolledQueueTasks(mainQUEUE_POLL_PRIORITY);
     vStartIntegerMathTasks(mainINTEGER_PRIORITY);
-    //vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
+    vAltStartComTestTasks(mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED);
     vStartI2CTestTasks(mainI2C_TEST_PRIORITY, mainI2C_TEST_LED);
-    vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
+    //vStartSemaphoreTasks(mainSEM_TEST_PRIORITY);
 
     /* Start the tasks defined in this file.  The first three never block so
     must not be used with the co-operative scheduler. */
@@ -294,17 +294,22 @@ static void vErrorChecks(void *pvParameters)
 
         if(xArePollingQueuesStillRunning() != pdTRUE)
         {
-            //xErrorHasOccurred = pdTRUE;
+            xErrorHasOccurred = pdTRUE;
         }
 
         if(xAreComTestTasksStillRunning() != pdTRUE)
         {
-            //xErrorHasOccurred = pdTRUE;
+            xErrorHasOccurred = pdTRUE;
+        }
+
+        if(xAreI2CTestTasksStillRunning() != pdTRUE)
+        {
+            xErrorHasOccurred = pdTRUE;
         }
 
         if(xAreSemaphoreTasksStillRunning() != pdTRUE)
         {
-            xErrorHasOccurred = pdTRUE;
+            //xErrorHasOccurred = pdTRUE;
         }
 
         /* If an error has occurred, latch it to cause the LED flash rate to

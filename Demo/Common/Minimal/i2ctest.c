@@ -69,14 +69,31 @@
 #include "serial.h"
 #include "partest.h"
 
-#define i2cSTACK_SIZE                  configMINIMAL_STACK_SIZE
+#define i2cSTACK_SIZE                     configMINIMAL_STACK_SIZE
 #define i2cDATA_LED_OFFSET               ( 0 )
 #define i2cTOTAL_PERMISSIBLE_ERRORS      ( 2 )
+
+#define i2cTX_MAX_BLOCK_TIME           ( ( TickType_t ) 0x96 / portTICK_PERIOD_MS)
+#define i2cTX_MIN_BLOCK_TIME           ( ( TickType_t ) 0x32 / portTICK_PERIOD_MS)
+#define i2cOFFSET_TIME                 ( ( TickType_t ) 3 )
+
+/* We should find that each character can be queued for Tx immediately and we
+ * don't have to block to send. */
+#define i2cNO_BLOCK                    ( ( TickType_t ) 0 )
+
+/* The Rx task will block on the Rx queue for a long period. */
+#define i2cRX_BLOCK_TIME               ( ( TickType_t ) 0xffff )
+
+#define i2cFIRST_BYTE                  ( 'A' )
+#define i2cLAST_BYTE                   ( 'X' )
+
+#define i2cBUFFER_LEN                  ( ( UBaseType_t ) ( i2cLAST_BYTE - i2cFIRST_BYTE ) + ( UBaseType_t ) 1 )
+#define i2cINITIAL_RX_COUNT_VALUE      ( 0 )
 
 SemaphoreHandle_t xSlaveReceivedSemaphore;
 SemaphoreHandle_t xSlaveTransmidSemaphore;
 
-uint8_t I2CTempBuffer[6];
+uint8_t I2CTempBuffer[i2cBUFFER_LEN];
 
 extern QueueHandle_t xSlaveReceivedQueue;
 extern QueueHandle_t xSlaveTransmidQueue;
@@ -84,11 +101,14 @@ extern QueueHandle_t xSlaveTransmidQueue;
 /* The transmit task as described at the top of the file. */
 static portTASK_FUNCTION_PROTO(vSlaveReceived, pvParameters);
 static portTASK_FUNCTION_PROTO(vSlaveTransmid, pvParameters);
+static portTASK_FUNCTION_PROTO(vMasterProccess, pvParameters);
 
 /* The LED that should be toggled by the Rx and Tx tasks.  The Rx task will
  * toggle LED ( uxBaseLED + comRX_LED_OFFSET).  The Tx task will toggle LED
  * ( uxBaseLED + comTX_LED_OFFSET ). */
 static UBaseType_t uxBaseLED = 0;
+
+static volatile UBaseType_t uxRxLoops = i2cINITIAL_RX_COUNT_VALUE;
 
 /*-----------------------------------------------------------*/
 
@@ -98,12 +118,9 @@ void vStartI2CTestTasks(UBaseType_t uxPriority,
     /* Initialise the com port then spawn the Rx and Tx tasks. */
     uxBaseLED = uxLED;
 
-    xI2CSlaveInitMinimal();
+    xI2CSlaveInitMinimal(i2cBUFFER_LEN);
 
     xI2CMasterInitMinimal();
-
-    SET_PB0_IO_OUT;
-    PB0 = 0;
 
     vSemaphoreCreateBinary(xSlaveTransmidSemaphore);
 
@@ -112,12 +129,37 @@ void vStartI2CTestTasks(UBaseType_t uxPriority,
     /* The Tx task is spawned with a lower priority than the Rx task. */
     xTaskCreate(vSlaveReceived, "I2C_RCV", i2cSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
     xTaskCreate(vSlaveTransmid, "I2C_TRD", i2cSTACK_SIZE, NULL, uxPriority, (TaskHandle_t *) NULL);
+    xTaskCreate(vMasterProccess, "MasterTst", i2cSTACK_SIZE, NULL, uxPriority - 1, (TaskHandle_t *) NULL);
 }
+
+/*-----------------------------------------------------------*/
+
+static portTASK_FUNCTION(vSlaveTransmid, pvParameters)
+{
+    uint8_t TempByte;
+
+    (void) pvParameters;
+
+    for(; ;)
+    {
+        if(xSemaphoreTake(xSlaveTransmidSemaphore, portMAX_DELAY) == pdPASS)
+        {
+            for(TempByte = i2cFIRST_BYTE; TempByte <= i2cLAST_BYTE; TempByte++)
+            {
+                xQueueSend(xSlaveTransmidQueue, &TempByte, 0);
+                vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
+            }
+        }
+    }
+}
+
 /*-----------------------------------------------------------*/
 
 static portTASK_FUNCTION(vSlaveReceived, pvParameters)
 {
-    uint8_t temp = 0, i;
+    uint8_t TempByte;
+    uint8_t ExpectedByte;
+    BaseType_t xErrorOccurred = pdFALSE;
 
     (void) pvParameters;
 
@@ -125,120 +167,79 @@ static portTASK_FUNCTION(vSlaveReceived, pvParameters)
     {
         if(xSemaphoreTake(xSlaveReceivedSemaphore, portMAX_DELAY) == pdPASS)
         {
-            i = 0;
-            while(xQueueReceive(xSlaveReceivedQueue, &temp, 0) == (portBASE_TYPE) pdTRUE)
+            for(ExpectedByte = i2cFIRST_BYTE; ExpectedByte <= i2cLAST_BYTE; ExpectedByte++)
             {
-                temp += 1;
-                I2CTempBuffer[i++] = temp;
-                xQueueSend(xSlaveTransmidQueue, &temp, 0);
-                vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
+                if(xQueueReceive(xSlaveReceivedQueue, &TempByte, 0) == (portBASE_TYPE) pdTRUE)
+                {
+                    if(TempByte != ExpectedByte)
+                    {
+                        xErrorOccurred++;
+                    }
+                    vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
+                }
             }
-
-            vI2CMasterReadData(0xC0, I2CTempBuffer, 6);
-
-            vTaskDelay(50); // 100ms
+        }
+        if(xErrorOccurred < i2cTOTAL_PERMISSIBLE_ERRORS)
+        {
+            /* Increment the count of successful loops.  As error
+             * occurring (i.e. an unexpected character being received) will
+             * prevent this counter being incremented for the rest of the
+             * execution.   Don't worry about mutual exclusion on this
+             * variable - it doesn't really matter as we just want it
+             * to change. */
+            uxRxLoops++;
         }
     }
 }
+
 /*-----------------------------------------------------------*/
 
-static portTASK_FUNCTION(vSlaveTransmid, pvParameters)
+static portTASK_FUNCTION(vMasterProccess, pvParameters)
 {
-    uint8_t temp = 0x55;
-    (void) pvParameters;
+    TickType_t xTimeToWait;
 
-    I2CTempBuffer[0] = 1;
-    I2CTempBuffer[1] = 2;
-    I2CTempBuffer[2] = 3;
-    I2CTempBuffer[3] = 4;
-    I2CTempBuffer[4] = 5;
-    I2CTempBuffer[5] = 6;
+    (void) pvParameters;
 
     for(; ;)
     {
-        if(xSemaphoreTake(xSlaveTransmidSemaphore, portMAX_DELAY) == pdPASS)
+        vI2CMasterReadData(0xC0, I2CTempBuffer, i2cBUFFER_LEN);
+        /* We have posted all the characters in the string - wait before
+         * re-sending.  Wait a pseudo-random time as this will provide a better
+         * test. */
+        xTimeToWait = xTaskGetTickCount() + i2cOFFSET_TIME;
+
+        /* Make sure we don't wait too long... */
+        xTimeToWait %= i2cTX_MAX_BLOCK_TIME;
+
+        /* ...but we do want to wait. */
+        if(xTimeToWait < i2cTX_MIN_BLOCK_TIME)
         {
-            vParTestToggleLED(uxBaseLED + i2cDATA_LED_OFFSET);
-
-            vI2CMasterWriteData(0xC0, I2CTempBuffer, 6);
-
-            vTaskDelay(50); // 100ms
+            xTimeToWait = i2cTX_MIN_BLOCK_TIME;
         }
+
+        vTaskDelay(xTimeToWait);
+
+        vI2CMasterWriteData(0xC0, I2CTempBuffer, i2cBUFFER_LEN);
+
+        /* We have posted all the characters in the string - wait before
+         * re-sending.  Wait a pseudo-random time as this will provide a better
+         * test. */
+        xTimeToWait = xTaskGetTickCount() + i2cOFFSET_TIME;
+
+        /* Make sure we don't wait too long... */
+        xTimeToWait %= i2cTX_MAX_BLOCK_TIME;
+
+        /* ...but we do want to wait. */
+        if(xTimeToWait < i2cTX_MIN_BLOCK_TIME)
+        {
+            xTimeToWait = i2cTX_MIN_BLOCK_TIME;
+        }
+
+        vTaskDelay(xTimeToWait);
     }
 }
 
-// static portTASK_FUNCTION( vI2CRxTask, pvParameters )
-// {
-//     signed char cExpectedByte, cByteRxed;
-//     BaseType_t xResyncRequired = pdFALSE, xErrorOccurred = pdFALSE;
-
-//     /* Just to stop compiler warnings. */
-//     ( void ) pvParameters;
-
-//     for( ; ; )
-//     {
-//         /* We expect to receive the characters from comFIRST_BYTE to
-//          * comLAST_BYTE in an incrementing order.  Loop to receive each byte. */
-//         for( cExpectedByte = comFIRST_BYTE; cExpectedByte <= comLAST_BYTE; cExpectedByte++ )
-//         {
-//             /* Block on the queue that contains received bytes until a byte is
-//              * available. */
-//             if( xI2CGetChar( xPort, &cByteRxed, comRX_BLOCK_TIME ) )
-//             {
-//                 /* Was this the byte we were expecting?  If so, toggle the LED,
-//                 * otherwise we are out on sync and should break out of the loop
-//                 * until the expected character sequence is about to restart. */
-//                 if( cByteRxed == cExpectedByte )
-//                 {
-//                     vParTestToggleLED( uxBaseLED + comRX_LED_OFFSET );
-//                 }
-//                 else
-//                 {
-//                     xResyncRequired = pdTRUE;
-//                     break; /*lint !e960 Non-switch break allowed. */
-//                 }
-//             }
-//         }
-
-//         /* Turn the LED off while we are not doing anything. */
-//         vParTestSetLED( uxBaseLED + comRX_LED_OFFSET, pdFALSE );
-
-//         /* Did we break out of the loop because the characters were received in
-//          * an unexpected order?  If so wait here until the character sequence is
-//          * about to restart. */
-//         if( xResyncRequired == pdTRUE )
-//         {
-//             while( cByteRxed != comLAST_BYTE )
-//             {
-//                 /* Block until the next char is available. */
-//                 xI2CGetChar( xPort, &cByteRxed, comRX_BLOCK_TIME );
-//             }
-
-//             /* Note that an error occurred which caused us to have to resync.
-//              * We use this to stop incrementing the loop counter so
-//              * sAreComTestTasksStillRunning() will return false - indicating an
-//              * error. */
-//             xErrorOccurred++;
-
-//             /* We have now resynced with the Tx task and can continue. */
-//             xResyncRequired = pdFALSE;
-//         }
-//         else
-//         {
-//             if( xErrorOccurred < comTOTAL_PERMISSIBLE_ERRORS )
-//             {
-//                 /* Increment the count of successful loops.  As error
-//                  * occurring (i.e. an unexpected character being received) will
-//                  * prevent this counter being incremented for the rest of the
-//                  * execution.   Don't worry about mutual exclusion on this
-//                  * variable - it doesn't really matter as we just want it
-//                  * to change. */
-//                 uxRxLoops++;
-//             }
-//         }
-//     }
-// } /*lint !e715 !e818 pvParameters is required for a task function even if it is not referenced. */
-// /*-----------------------------------------------------------*/
+/*-----------------------------------------------------------*/
 
 BaseType_t xAreI2CTestTasksStillRunning(void)
 {
@@ -247,15 +248,17 @@ BaseType_t xAreI2CTestTasksStillRunning(void)
     /* If the count of successful reception loops has not changed than at
      * some time an error occurred (i.e. a character was received out of sequence)
      * and we will return false. */
-    // if( uxRxLoops == comINITIAL_RX_COUNT_VALUE )
-    // {
-    //     xReturn = pdFALSE;
-    // }
-    // else
+    if(uxRxLoops == i2cINITIAL_RX_COUNT_VALUE)
+    {
+        xReturn = pdFALSE;
+    }
+    else
     {
         xReturn = pdTRUE;
     }
-
+    /* Reset the count of successful Rx loops.  When this function is called
+     * again we expect this to have been incremented. */
+    uxRxLoops = i2cINITIAL_RX_COUNT_VALUE;
 
     return xReturn;
 }

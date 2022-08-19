@@ -27,7 +27,7 @@
 #ifndef I2C_SLAVE_H
 #define I2C_SLAVE_H
 
-void xI2CSlaveInitMinimal( void );
+void xI2CSlaveInitMinimal(unsigned portBASE_TYPE uxQueueLength);
 void vI2CSlaveClose( void );
 
 #endif /* ifndef I2C_SLAVE_H */

@@ -33,9 +33,6 @@
 #include "semphr.h"
 #include "i2c_slave.h"
 
-#define I2C_SLAVE_TRANSMID_BUFFER_SIZE  6
-#define I2C_SLAVE_RECEIVED_BUFFER_SIZE  6
-
 //#define I2C_PORT 1 // PE4/5
 #define I2C_PORT 0 // PC4/5
 #define I2C_ADDRESS 0xC0
@@ -45,13 +42,15 @@ QueueHandle_t xSlaveTransmidQueue;
 
 static uint8_t I2CSlaveTransmidBufferIndex;
 static uint8_t I2CSlaveReceivedBufferIndex;
+static uint8_t I2CTransmitedBufferSize;
+static uint8_t I2CReceivedBufferSize;
 
 extern SemaphoreHandle_t xSlaveReceivedSemaphore;
 extern SemaphoreHandle_t xSlaveTransmidSemaphore;
 
 /*-----------------------------------------------------------*/
 
-void xI2CSlaveInitMinimal(void)
+void xI2CSlaveInitMinimal(unsigned portBASE_TYPE uxQueueLength)
 {
     uint8_t ucOriginalSFRPage;
 
@@ -63,8 +62,11 @@ void xI2CSlaveInitMinimal(void)
         I2CSlaveReceivedBufferIndex = 0;
         I2CSlaveTransmidBufferIndex = 0;
 
-        xSlaveReceivedQueue = xQueueCreate(I2C_SLAVE_TRANSMID_BUFFER_SIZE, (unsigned portBASE_TYPE) sizeof(uint8_t));
-        xSlaveTransmidQueue = xQueueCreate(I2C_SLAVE_RECEIVED_BUFFER_SIZE, (unsigned portBASE_TYPE) sizeof(uint8_t));
+        I2CReceivedBufferSize = uxQueueLength;
+        I2CTransmitedBufferSize = uxQueueLength;
+
+        xSlaveReceivedQueue = xQueueCreate(uxQueueLength, (unsigned portBASE_TYPE) sizeof(uint8_t));
+        xSlaveTransmidQueue = xQueueCreate(uxQueueLength, (unsigned portBASE_TYPE) sizeof(uint8_t));
 
         EA = 0;
         IPL1 |= 0x08;
@@ -128,9 +130,7 @@ void vI2CISR(void) interrupt(10)
 
     portENTER_CRITICAL();
     {
-        PB0 = 1;
         ucOriginalSFRPage = SFRPAGE;
-        PB0 = 0;
         IRCON1 &= ~0x08;
         if(IICSTAT & 0x02)
         {
@@ -167,7 +167,7 @@ void vI2CISR(void) interrupt(10)
                 {
                     IICBUF = temp;
                 }
-                if(++I2CSlaveTransmidBufferIndex >= I2C_SLAVE_TRANSMID_BUFFER_SIZE)
+                if(++I2CSlaveTransmidBufferIndex >= I2CTransmitedBufferSize)
                 {
                     I2CSlaveTransmidBufferIndex = 0;
                 }
@@ -179,19 +179,15 @@ void vI2CISR(void) interrupt(10)
                 {
                     temp = IICBUF;
                     xQueueSendFromISR(xSlaveReceivedQueue, &temp, &xHigherPriorityTaskWoken);
-                    if(++I2CSlaveReceivedBufferIndex >= I2C_SLAVE_RECEIVED_BUFFER_SIZE)
+                    if(++I2CSlaveReceivedBufferIndex >= I2CReceivedBufferSize)
                     {
                         I2CSlaveReceivedBufferIndex = 0;
-                        PB0 = 1;
                         xSemaphoreGiveFromISR(xSlaveReceivedSemaphore, &xHigherPriorityTaskWoken);
-                        PB0 = 0;
                     }
                 }
                 else
-                {              
-                    PB0 = 1;
+                {
                     xSemaphoreGiveFromISR(xSlaveTransmidSemaphore, &xHigherPriorityTaskWoken);
-                    PB0 = 0;
                 }
             }
         }
